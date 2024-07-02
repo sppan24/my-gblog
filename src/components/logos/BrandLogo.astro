@@ -1,0 +1,14 @@
+---
+import Image from '@components/Image.astro'
+import logo from '@images/brand-logo.jpeg'
+import { SITE } from '../../config';
+---
+
+<Image
+    src={logo}
+    alt={SITE.title}
+    {...Astro.props}
+    draggable="false"
+    loading="eager"
+/>
+
