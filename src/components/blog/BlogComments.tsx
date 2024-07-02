@@ -44,7 +44,7 @@ function BlogComments() {
                         repo="sppan24/my-gblog"
                         repoId="R_kgDOMQv6-Q"
                         category="Announcements"
-                        categoryId="DIC_kwDOB5YtJs4CfZnX"
+                        categoryId="DIC_kwDOMQv6-c4Cghhs"
                         mapping="title"
                         reactionsEnabled="1"
                         emitMetadata="0"
