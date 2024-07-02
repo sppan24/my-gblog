@@ -41,8 +41,8 @@ function BlogComments() {
                 ? (
                     <Giscus
                         id={id}
-                        repo="godruoyi/gblog"
-                        repoId="MDEwOlJlcG9zaXRvcnkxMjcyODI0NzA"
+                        repo="sppan24/my-gblog"
+                        repoId="R_kgDOMQv6-Q"
                         category="Announcements"
                         categoryId="DIC_kwDOB5YtJs4CfZnX"
                         mapping="title"
