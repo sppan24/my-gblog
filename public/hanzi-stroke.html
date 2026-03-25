@@ -375,7 +375,7 @@
             <button class="btn btn-stroke" id="nextStrokeBtn" onclick="showNextStroke()" disabled>下一笔</button>
             <button class="btn btn-replay" id="replayBtn" onclick="replayStroke()" disabled>重复</button>
             <button class="btn btn-reset" id="resetBtn" onclick="resetStrokes()" disabled>重置</button>
-            <button class="btn btn-animate" id="animateBtn" onclick="animateAll()" disabled>自动书写</button>
+            <button class="btn btn-animate" id="animateBtn" onclick="animateAll()" disabled>自动写</button>
         </div>
 
         <div class="button-row" id="quizButtons" style="display:none;">
@@ -393,6 +393,8 @@
         let currentChar = '';
         let quizMistakes = 0;
         let quizCorrect = 0;
+
+        let isAnimating = false;     // 自动书写进行中标记
 
         let charArray = [];
         let charIndex = 0;
@@ -563,6 +565,8 @@
         }
 
         function reloadAll() {
+            cancelAdvance();
+            isAnimating = false;
             loadedCount = 0;
             charDone = {};
             charIndex = 0;
@@ -571,7 +575,16 @@
 
         // ========== 选字 ==========
         function selectChar(idx) {
-            if (idx === charIndex) return;
+            if (idx === charIndex && !isAnimating) return;
+
+            cancelAdvance();
+
+            // 如果正在自动书写，先取消当前动画
+            if (isAnimating) {
+                isAnimating = false;
+                if (writer) writer.cancelQuiz();
+            }
+
             charIndex = idx;
             currentChar = charArray[idx];
             writer = writers[idx];
@@ -581,6 +594,12 @@
             quizCorrect = 0;
             updateScoreBar();
             updateActiveUI();
+
+            // 重置当前字的 writer 显示状态
+            if (writer) {
+                writer.hideCharacter();
+                writer.showOutline();
+            }
 
             if (currentMode === 'quiz') {
                 startQuiz();
@@ -601,6 +620,7 @@
         // ========== 演示模式 ==========
         function showNextStroke() {
             if (!writer || currentStroke >= totalStrokes) return;
+            cancelAdvance();
             writer.animateStroke(currentStroke, {
                 onComplete: function () {
                     currentStroke++;
@@ -624,35 +644,56 @@
 
         function resetStrokes() {
             if (!writer) return;
+            cancelAdvance();
+            isAnimating = false;
             currentStroke = 0;
+            delete charDone[charIndex];
             writer.hideCharacter();
             writer.showOutline();
             updateInfo();
+            updateActiveUI();
             document.getElementById('nextStrokeBtn').disabled = false;
             document.getElementById('replayBtn').disabled = true;
         }
 
         function animateAll() {
             if (!writer) return;
+
+            cancelAdvance();
+            isAnimating = true;
             currentStroke = 0;
             writer.hideCharacter();
             writer.showOutline();
             updateInfo();
             document.getElementById('nextStrokeBtn').disabled = true;
+            document.getElementById('replayBtn').disabled = true;
             document.getElementById('animateBtn').disabled = true;
             document.getElementById('resetBtn').disabled = true;
 
+            // 锁定当前字的信息
+            var lockedWriter = writer;
+            var lockedTotal = totalStrokes;
+            var lockedChar = currentChar;
+            var lockedIndex = charIndex;
+
             function animateNext(n) {
-                if (n >= totalStrokes) {
+                // 动画被取消或用户切了字
+                if (!isAnimating || charIndex !== lockedIndex) return;
+
+                if (n >= lockedTotal) {
+                    isAnimating = false;
                     document.getElementById('strokeInfo').innerHTML =
-                        '「' + currentChar + '」完成！共 <span class="highlight">' + totalStrokes + '</span> 笔 ✅';
+                        '「' + lockedChar + '」完成！共 <span class="highlight">' + lockedTotal + '</span> 笔 ✅';
                     document.getElementById('animateBtn').disabled = false;
                     document.getElementById('resetBtn').disabled = false;
+                    document.getElementById('replayBtn').disabled = false;
+                    document.getElementById('nextStrokeBtn').disabled = true;
                     if (charArray.length > 1) autoAdvance();
                     return;
                 }
-                writer.animateStroke(n, {
+                lockedWriter.animateStroke(n, {
                     onComplete: function () {
+                        if (!isAnimating || charIndex !== lockedIndex) return;
                         currentStroke = n + 1;
                         updateInfo();
                         animateNext(n + 1);
@@ -737,25 +778,39 @@
         }
 
         // ========== 自动跳转 ==========
+        var advanceTimer = null;
+
         function markCurrentDone() {
             charDone[charIndex] = true;
             updateActiveUI();
         }
 
+        function cancelAdvance() {
+            if (advanceTimer) {
+                clearTimeout(advanceTimer);
+                advanceTimer = null;
+            }
+        }
+
         function autoAdvance() {
             if (charArray.length <= 1) return;
             markCurrentDone();
+            cancelAdvance();
 
             for (var i = 1; i <= charArray.length; i++) {
                 var idx = (charIndex + i) % charArray.length;
                 if (!charDone[idx]) {
                     (function(nextIdx) {
-                        setTimeout(function() { selectChar(nextIdx); }, 800);
+                        advanceTimer = setTimeout(function() {
+                            advanceTimer = null;
+                            selectChar(nextIdx);
+                        }, 800);
                     })(idx);
                     return;
                 }
             }
-            setTimeout(function() {
+            advanceTimer = setTimeout(function() {
+                advanceTimer = null;
                 document.getElementById('strokeInfo').innerHTML =
                     '🎉 全部 <span class="highlight">' + charArray.length + '</span> 个字完成！';
             }, 800);
