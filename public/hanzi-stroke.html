@@ -167,6 +167,15 @@
             border-radius: 4px;
         }
 
+        /* quiz 模式：只显示活跃格子，其余隐藏 */
+        .grids-row.quiz-mode .grid-cell {
+            display: none;
+        }
+
+        .grids-row.quiz-mode .grid-cell.active {
+            display: block;
+        }
+
         .grid-cell.active {
             border-color: #4a90d9;
             box-shadow: 0 0 0 3px rgba(74, 144, 217, 0.3);
@@ -267,6 +276,74 @@
         .score-bar .correct-count { color: #28a745; }
         .score-bar .mistake-count { color: #e8533e; }
 
+        /* ========== Quiz 切字标签栏 ========== */
+        .quiz-char-tabs {
+            display: none;
+            gap: 8px;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin-bottom: 10px;
+            width: 100%;
+        }
+
+        .quiz-char-tabs.visible {
+            display: flex;
+        }
+
+        .quiz-char-tab {
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            border: 2px solid #d0d7de;
+            border-radius: 8px;
+            cursor: pointer;
+            background: #fff;
+            color: #333;
+            transition: all 0.15s;
+            position: relative;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .quiz-char-tab:active {
+            transform: scale(0.93);
+        }
+
+        .quiz-char-tab.active {
+            border-color: #4a90d9;
+            background: #4a90d9;
+            color: #fff;
+            box-shadow: 0 1px 4px rgba(74, 144, 217, 0.3);
+        }
+
+        .quiz-char-tab.done {
+            border-color: #28a745;
+        }
+
+        .quiz-char-tab.done::after {
+            content: '✓';
+            position: absolute;
+            top: -4px;
+            right: -4px;
+            width: 14px;
+            height: 14px;
+            background: #28a745;
+            color: #fff;
+            border-radius: 50%;
+            font-size: 9px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            line-height: 1;
+        }
+
+        .quiz-char-tab.active.done::after {
+            background: #fff;
+            color: #4a90d9;
+        }
+
         /* ========== 响应式 ========== */
 
         /* 大屏 / 桌面 */
@@ -333,6 +410,17 @@
                 gap: 6px;
             }
 
+            .quiz-char-tabs {
+                gap: 6px;
+            }
+
+            .quiz-char-tab {
+                width: 32px;
+                height: 32px;
+                font-size: 16px;
+                border-radius: 6px;
+            }
+
             .info {
                 font-size: 13px;
             }
@@ -364,6 +452,9 @@
 
         <!-- 小田字格横排 -->
         <div class="grids-row" id="gridsRow"></div>
+
+        <!-- Quiz 模式切字标签 -->
+        <div class="quiz-char-tabs" id="quizCharTabs"></div>
 
         <div class="info" id="strokeInfo">请输入汉字并点击「加载」</div>
         <div class="score-bar" id="scoreBar" style="display:none;">
@@ -409,6 +500,9 @@
             document.getElementById('demoButtons').style.display = mode === 'demo' ? 'flex' : 'none';
             document.getElementById('quizButtons').style.display = mode === 'quiz' ? 'flex' : 'none';
             document.getElementById('scoreBar').style.display = mode === 'quiz' ? 'flex' : 'none';
+            document.getElementById('gridsRow').classList.toggle('quiz-mode', mode === 'quiz');
+
+            updateQuizTabs();
 
             if (charArray.length > 0) {
                 reloadAll();
@@ -437,22 +531,25 @@
         // ========== 自适应格子尺寸 ==========
         function calcCellSize(count) {
             var vw = window.innerWidth;
-            var appPad = vw <= 360 ? 20 : 32; // .app 左右 padding 合计
+            var appPad = vw <= 360 ? 20 : 32;
             var available = Math.min(vw, 600) - appPad;
             var gap = vw <= 360 ? 6 : 10;
 
             if (count === 1) {
-                // 单字尽量大，但不超过可用宽度和 220px
                 var s = Math.min(220, available * 0.6);
                 return { size: Math.round(s), padding: Math.round(s * 0.07) };
             }
 
-            // 多字：先算一行能放几个
-            // 手机上 4 个字一行比较舒服，超过就换行
+            // quiz 模式：只显示一个大格子，尺寸接近单字
+            if (currentMode === 'quiz') {
+                var qs = Math.min(240, available * 0.65);
+                return { size: Math.round(qs), padding: Math.round(qs * 0.06) };
+            }
+
+            // 演示模式：多字一排
             var perRow = count;
             var idealSize = Math.floor((available - gap * (perRow - 1)) / perRow);
 
-            // 如果单行放不下（< 70px），减少每行个数
             if (idealSize < 70) {
                 perRow = Math.max(2, Math.floor((available + gap) / (70 + gap)));
                 idealSize = Math.floor((available - gap * (perRow - 1)) / perRow);
@@ -506,6 +603,8 @@
             charIndex = 0;
             currentChar = charArray[0];
             updateActiveUI();
+            renderQuizTabs();
+            document.getElementById('gridsRow').classList.toggle('quiz-mode', currentMode === 'quiz');
         }
 
         function createWriter(index, char, size, padding) {
@@ -615,6 +714,7 @@
                 cells[i].classList.toggle('active', i === charIndex);
                 cells[i].classList.toggle('done', !!charDone[i]);
             }
+            updateQuizTabs();
         }
 
         // ========== 演示模式 ==========
@@ -725,10 +825,13 @@
         // ========== Quiz ==========
         function startQuiz() {
             if (!writer) return;
+            cancelAdvance();
             currentStroke = 0;
             quizMistakes = 0;
             quizCorrect = 0;
+            delete charDone[charIndex];
             updateScoreBar();
+            updateActiveUI();
 
             writer.hideCharacter();
             writer.showOutline();
@@ -814,6 +917,42 @@
                 document.getElementById('strokeInfo').innerHTML =
                     '🎉 全部 <span class="highlight">' + charArray.length + '</span> 个字完成！';
             }, 800);
+        }
+
+        // ========== Quiz 切字标签 ==========
+        function renderQuizTabs() {
+            var container = document.getElementById('quizCharTabs');
+            container.innerHTML = '';
+            if (currentMode !== 'quiz' || charArray.length <= 1) {
+                container.classList.remove('visible');
+                return;
+            }
+            container.classList.add('visible');
+            for (var i = 0; i < charArray.length; i++) {
+                var tab = document.createElement('div');
+                tab.className = 'quiz-char-tab' + (i === charIndex ? ' active' : '') + (charDone[i] ? ' done' : '');
+                tab.textContent = charArray[i];
+                tab.onclick = (function(idx) {
+                    return function() { selectChar(idx); };
+                })(i);
+                container.appendChild(tab);
+            }
+        }
+
+        function updateQuizTabs() {
+            if (currentMode !== 'quiz' || charArray.length <= 1) {
+                document.getElementById('quizCharTabs').classList.remove('visible');
+                return;
+            }
+            var tabs = document.querySelectorAll('.quiz-char-tab');
+            if (tabs.length === 0) {
+                renderQuizTabs();
+                return;
+            }
+            for (var i = 0; i < tabs.length; i++) {
+                tabs[i].classList.toggle('active', i === charIndex);
+                tabs[i].classList.toggle('done', !!charDone[i]);
+            }
         }
 
         // ========== 回车加载 ==========
