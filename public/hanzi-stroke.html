@@ -721,12 +721,13 @@
         function showNextStroke() {
             if (!writer || currentStroke >= totalStrokes) return;
             cancelAdvance();
+            disableDemoButtons();
             writer.animateStroke(currentStroke, {
                 onComplete: function () {
                     currentStroke++;
                     updateInfo();
-                    // 有了新笔画，可以重复
-                    document.getElementById('replayBtn').disabled = false;
+                    enableDemoButtons();
+                    document.getElementById('replayBtn').disabled = (currentStroke <= 0);
                     if (currentStroke >= totalStrokes) {
                         document.getElementById('nextStrokeBtn').disabled = true;
                         document.getElementById('strokeInfo').innerHTML =
@@ -738,8 +739,15 @@
 
         function replayStroke() {
             if (!writer || currentStroke <= 0) return;
-            // 重播上一笔（不改变 currentStroke，纯粹重新动画演示）
-            writer.animateStroke(currentStroke - 1);
+            disableDemoButtons();
+            writer.animateStroke(currentStroke - 1, {
+                onComplete: function () {
+                    enableDemoButtons();
+                    if (currentStroke >= totalStrokes) {
+                        document.getElementById('nextStrokeBtn').disabled = true;
+                    }
+                }
+            });
         }
 
         function resetStrokes() {
