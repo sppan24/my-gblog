@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>汉字笔画书写</title>
     <script src="https://cdn.jsdelivr.net/npm/hanzi-writer@3.5/dist/hanzi-writer.min.js"></script>
     <style>
@@ -10,130 +10,131 @@
             margin: 0;
             padding: 0;
             box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
         }
 
         body {
             min-height: 100vh;
+            min-height: -webkit-fill-available;
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: center;
-            background: #f0f4f8;
-            font-family: -apple-system, "Microsoft YaHei", sans-serif;
+            background: #eef2f7;
+            font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
+            padding: 0;
+        }
+
+        /* ========== 主容器 - 卡片式 ========== */
+        .app {
+            width: 100%;
+            max-width: 600px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 24px 16px 32px;
+            min-height: 100vh;
         }
 
         h1 {
-            font-size: 28px;
-            color: #333;
-            margin-bottom: 30px;
+            font-size: 22px;
+            color: #2c3e50;
+            margin-bottom: 20px;
+            letter-spacing: 2px;
         }
 
+        /* ========== 输入区域 ========== */
         .controls {
             display: flex;
-            gap: 12px;
-            margin-bottom: 20px;
-            align-items: center;
+            gap: 10px;
+            margin-bottom: 16px;
+            width: 100%;
+            max-width: 400px;
         }
 
         .controls input {
-            width: 120px;
-            height: 46px;
+            flex: 1;
+            min-width: 0;
+            height: 44px;
             text-align: center;
-            font-size: 24px;
-            border: 2px solid #ccc;
-            border-radius: 8px;
+            font-size: 20px;
+            border: 2px solid #d0d7de;
+            border-radius: 10px;
             outline: none;
-            transition: border-color 0.3s;
+            transition: border-color 0.3s, box-shadow 0.3s;
+            letter-spacing: 3px;
+            background: #fff;
         }
 
         .controls input:focus {
             border-color: #4a90d9;
+            box-shadow: 0 0 0 3px rgba(74, 144, 217, 0.15);
         }
 
+        .controls .btn {
+            flex-shrink: 0;
+        }
+
+        /* ========== 按钮通用 ========== */
         .btn {
-            height: 46px;
-            padding: 0 24px;
-            font-size: 16px;
+            height: 44px;
+            padding: 0 20px;
+            font-size: 15px;
             border: none;
-            border-radius: 8px;
+            border-radius: 10px;
             cursor: pointer;
-            transition: all 0.2s;
+            transition: all 0.15s;
             font-weight: 600;
+            white-space: nowrap;
         }
 
         .btn:active {
-            transform: scale(0.96);
+            transform: scale(0.95);
+            opacity: 0.85;
         }
 
-        .btn-primary {
-            background: #4a90d9;
-            color: white;
-        }
+        .btn-primary { background: #4a90d9; color: #fff; }
+        .btn-primary:hover { background: #3a7bc8; }
 
-        .btn-primary:hover {
-            background: #3a7bc8;
-        }
+        .btn-stroke { background: #e8533e; color: #fff; }
+        .btn-stroke:hover { background: #d4432e; }
 
-        .btn-stroke {
-            background: #e8533e;
-            color: white;
-        }
+        .btn-reset { background: #6c757d; color: #fff; }
+        .btn-reset:hover { background: #5a6268; }
 
-        .btn-stroke:hover {
-            background: #d4432e;
-        }
+        .btn-animate { background: #28a745; color: #fff; }
+        .btn-animate:hover { background: #218838; }
 
-        .btn-reset {
-            background: #6c757d;
-            color: white;
-        }
-
-        .btn-reset:hover {
-            background: #5a6268;
-        }
-
-        .btn-animate {
-            background: #28a745;
-            color: white;
-        }
-
-        .btn-animate:hover {
-            background: #218838;
-        }
-
-        .btn-quiz {
-            background: #f5a623;
-            color: white;
-        }
-
-        .btn-quiz:hover {
-            background: #e09515;
-        }
+        .btn-replay { background: #f5a623; color: #fff; }
+        .btn-replay:hover { background: #e09515; }
 
         .btn:disabled {
-            opacity: 0.5;
+            opacity: 0.4;
             cursor: not-allowed;
+            transform: none;
         }
 
-        /* 模式切换标签 */
+        /* ========== 模式切换 ========== */
         .mode-tabs {
             display: flex;
-            gap: 0;
-            margin-bottom: 20px;
+            margin-bottom: 18px;
             border-radius: 10px;
             overflow: hidden;
             border: 2px solid #4a90d9;
+            width: 100%;
+            max-width: 280px;
         }
 
         .mode-tab {
-            padding: 10px 28px;
-            font-size: 15px;
+            flex: 1;
+            padding: 9px 0;
+            font-size: 14px;
             font-weight: 600;
             border: none;
             cursor: pointer;
             transition: all 0.2s;
             background: #fff;
             color: #4a90d9;
+            text-align: center;
         }
 
         .mode-tab.active {
@@ -145,239 +146,456 @@
             background: #e8f0fb;
         }
 
-        /* 田字格容器 */
-        .grid-wrapper {
-            position: relative;
-            width: 300px;
-            height: 300px;
-            border: 3px solid #b22222;
-            background: #fff;
-        }
-
-        /* 田字格线 - 虚线 */
-        .grid-wrapper::before,
-        .grid-wrapper::after {
-            content: '';
-            position: absolute;
-            z-index: 1;
-            pointer-events: none;
-        }
-
-        /* 横中线 */
-        .grid-wrapper::before {
-            top: 50%;
-            left: 0;
-            right: 0;
-            border-top: 1px dashed #b22222;
-        }
-
-        /* 竖中线 */
-        .grid-wrapper::after {
-            left: 50%;
-            top: 0;
-            bottom: 0;
-            border-left: 1px dashed #b22222;
-        }
-
-        /* 对角线 */
-        .diagonal-line {
-            position: absolute;
-            top: 0;
-            left: 0;
+        /* ========== 田字格区域 ========== */
+        .grids-row {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin-bottom: 6px;
             width: 100%;
-            height: 100%;
+            padding: 12px 0;
+        }
+
+        .grid-cell {
+            border: 2px solid #c0392b;
+            background: #fff;
+            position: relative;
+            cursor: pointer;
+            transition: border-color 0.2s, box-shadow 0.2s;
+            flex-shrink: 0;
+            border-radius: 4px;
+        }
+
+        .grid-cell.active {
+            border-color: #4a90d9;
+            box-shadow: 0 0 0 3px rgba(74, 144, 217, 0.3);
+        }
+
+        .grid-cell.done::after {
+            content: '✓';
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            width: 16px;
+            height: 16px;
+            background: #28a745;
+            color: #fff;
+            border-radius: 50%;
+            font-size: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10;
+            pointer-events: none;
+            line-height: 1;
+        }
+
+        .grid-cell.active.done::after {
+            background: #4a90d9;
+        }
+
+        .grid-lines {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
             z-index: 1;
             pointer-events: none;
         }
 
-        .diagonal-line line {
-            stroke: #b22222;
+        .grid-lines line {
+            stroke: #c0392b;
             stroke-width: 0.5;
-            stroke-dasharray: 6, 4;
+            stroke-dasharray: 4, 3;
+            opacity: 0.5;
         }
 
-        #writer-target {
+        .grid-cell .writer-div {
             position: relative;
             z-index: 2;
+            width: 100%;
+            height: 100%;
         }
 
+        /* ========== 信息提示 ========== */
         .info {
-            margin-top: 20px;
-            font-size: 16px;
-            color: #666;
-            min-height: 28px;
+            margin-top: 8px;
+            font-size: 15px;
+            color: #555;
+            min-height: 24px;
             text-align: center;
+            line-height: 1.5;
+            padding: 0 12px;
         }
 
         .info .highlight {
             color: #e8533e;
             font-weight: bold;
-            font-size: 20px;
+            font-size: 18px;
         }
 
-        .info .correct {
-            color: #28a745;
-        }
+        .info .correct { color: #28a745; }
+        .info .wrong { color: #e8533e; }
 
-        .info .wrong {
-            color: #e8533e;
-        }
-
+        /* ========== 操作按钮行 ========== */
         .button-row {
             display: flex;
-            gap: 12px;
-            margin-top: 16px;
-            min-height: 46px;
+            gap: 10px;
+            margin-top: 14px;
+            justify-content: center;
+            flex-wrap: wrap;
+            width: 100%;
+            max-width: 400px;
         }
 
-        /* 成绩统计 */
+        .button-row .btn {
+            flex: 1;
+            min-width: 0;
+            max-width: 140px;
+        }
+
+        /* ========== 成绩统计 ========== */
         .score-bar {
             display: flex;
-            gap: 24px;
-            margin-top: 8px;
-            font-size: 14px;
+            gap: 20px;
+            margin-top: 6px;
+            font-size: 13px;
             color: #888;
         }
 
-        .score-bar span {
-            font-weight: 600;
+        .score-bar span { font-weight: 600; }
+        .score-bar .correct-count { color: #28a745; }
+        .score-bar .mistake-count { color: #e8533e; }
+
+        /* ========== 响应式 ========== */
+
+        /* 大屏 / 桌面 */
+        @media (min-width: 600px) {
+            .app {
+                padding-top: 48px;
+            }
+
+            h1 {
+                font-size: 26px;
+                margin-bottom: 28px;
+            }
+
+            .controls input {
+                height: 48px;
+                font-size: 22px;
+            }
+
+            .btn {
+                height: 48px;
+                font-size: 16px;
+                padding: 0 24px;
+            }
+
+            .mode-tabs {
+                max-width: 320px;
+            }
+
+            .mode-tab {
+                padding: 10px 0;
+                font-size: 15px;
+            }
         }
 
-        .score-bar .correct-count {
-            color: #28a745;
-        }
+        /* 极小屏 (<= 360px) */
+        @media (max-width: 360px) {
+            .app {
+                padding: 16px 10px 24px;
+            }
 
-        .score-bar .mistake-count {
-            color: #e8533e;
+            h1 {
+                font-size: 19px;
+                margin-bottom: 14px;
+            }
+
+            .controls input {
+                height: 40px;
+                font-size: 17px;
+                letter-spacing: 2px;
+            }
+
+            .btn {
+                height: 40px;
+                padding: 0 14px;
+                font-size: 13px;
+            }
+
+            .mode-tab {
+                font-size: 12px;
+                padding: 8px 0;
+            }
+
+            .grids-row {
+                gap: 6px;
+            }
+
+            .info {
+                font-size: 13px;
+            }
+
+            .info .highlight {
+                font-size: 16px;
+            }
+
+            .button-row {
+                gap: 6px;
+            }
         }
     </style>
 </head>
 <body>
-    <h1>汉字笔画练习</h1>
+    <div class="app">
+        <h1>汉字笔画练习</h1>
 
-    <div class="controls">
-        <input type="text" id="charInput" maxlength="1" placeholder="输入汉字" />
-        <button class="btn btn-primary" id="loadBtn" onclick="loadCharacter()">加载</button>
-    </div>
+        <div class="controls">
+            <input type="text" id="charInput" maxlength="10" placeholder="输入汉字，最多10个" />
+            <button class="btn btn-primary" id="loadBtn" onclick="loadCharacter()">加载</button>
+        </div>
 
-    <!-- 模式切换 -->
-    <div class="mode-tabs">
-        <button class="mode-tab active" id="tabDemo" onclick="switchMode('demo')">📖 演示模式</button>
-        <button class="mode-tab" id="tabQuiz" onclick="switchMode('quiz')">✍️ 自己写</button>
-    </div>
+        <!-- 模式切换 -->
+        <div class="mode-tabs">
+            <button class="mode-tab active" id="tabDemo" onclick="switchMode('demo')">📖 演示</button>
+            <button class="mode-tab" id="tabQuiz" onclick="switchMode('quiz')">✍️ 自己写</button>
+        </div>
 
-    <div class="grid-wrapper">
-        <svg class="diagonal-line" viewBox="0 0 300 300">
-            <line x1="0" y1="0" x2="300" y2="300" />
-            <line x1="300" y1="0" x2="0" y2="300" />
-        </svg>
-        <div id="writer-target"></div>
-    </div>
+        <!-- 小田字格横排 -->
+        <div class="grids-row" id="gridsRow"></div>
 
-    <div class="info" id="strokeInfo">请输入一个汉字并点击「加载」</div>
-    <div class="score-bar" id="scoreBar" style="display:none;">
-        <div>✅ 正确：<span class="correct-count" id="correctCount">0</span></div>
-        <div>❌ 错误：<span class="mistake-count" id="mistakeCount">0</span></div>
-    </div>
+        <div class="info" id="strokeInfo">请输入汉字并点击「加载」</div>
+        <div class="score-bar" id="scoreBar" style="display:none;">
+            <div>✅ 正确：<span class="correct-count" id="correctCount">0</span></div>
+            <div>❌ 错误：<span class="mistake-count" id="mistakeCount">0</span></div>
+        </div>
 
-    <div class="button-row" id="demoButtons">
-        <button class="btn btn-stroke" id="nextStrokeBtn" onclick="showNextStroke()" disabled>下一笔</button>
-        <button class="btn btn-reset" id="resetBtn" onclick="resetStrokes()" disabled>重置</button>
-        <button class="btn btn-animate" id="animateBtn" onclick="animateAll()" disabled>自动书写</button>
-    </div>
+        <div class="button-row" id="demoButtons">
+            <button class="btn btn-stroke" id="nextStrokeBtn" onclick="showNextStroke()" disabled>下一笔</button>
+            <button class="btn btn-replay" id="replayBtn" onclick="replayStroke()" disabled>重复</button>
+            <button class="btn btn-reset" id="resetBtn" onclick="resetStrokes()" disabled>重置</button>
+            <button class="btn btn-animate" id="animateBtn" onclick="animateAll()" disabled>自动书写</button>
+        </div>
 
-    <div class="button-row" id="quizButtons" style="display:none;">
-        <button class="btn btn-reset" id="quizResetBtn" onclick="startQuiz()" disabled>重新开始</button>
+        <div class="button-row" id="quizButtons" style="display:none;">
+            <button class="btn btn-reset" id="quizResetBtn" onclick="startQuiz()" disabled>重新开始</button>
+        </div>
     </div>
 
     <script>
         let writer = null;
+        let writers = [];
+        let writerStrokes = [];
         let currentStroke = 0;
         let totalStrokes = 0;
-        let currentMode = 'demo';  // 'demo' 或 'quiz'
+        let currentMode = 'demo';
         let currentChar = '';
         let quizMistakes = 0;
         let quizCorrect = 0;
 
+        let charArray = [];
+        let charIndex = 0;
+        let charDone = {};
+        let loadedCount = 0;
+
         // ========== 模式切换 ==========
         function switchMode(mode) {
             currentMode = mode;
-
             document.getElementById('tabDemo').classList.toggle('active', mode === 'demo');
             document.getElementById('tabQuiz').classList.toggle('active', mode === 'quiz');
             document.getElementById('demoButtons').style.display = mode === 'demo' ? 'flex' : 'none';
             document.getElementById('quizButtons').style.display = mode === 'quiz' ? 'flex' : 'none';
             document.getElementById('scoreBar').style.display = mode === 'quiz' ? 'flex' : 'none';
 
-            // 如果已加载了汉字，切换模式时重新加载
-            if (currentChar) {
-                loadCharacter();
+            if (charArray.length > 0) {
+                reloadAll();
             }
         }
 
         // ========== 加载汉字 ==========
         function loadCharacter() {
             var input = document.getElementById('charInput').value.trim();
-            if (!input) {
-                alert('请输入一个汉字！');
-                return;
+            if (!input) { alert('请输入汉字！'); return; }
+
+            var chars = input.match(/[\u4e00-\u9fff]/g);
+            if (!chars || chars.length === 0) { alert('请输入有效的汉字！'); return; }
+
+            charArray = chars.slice(0, 10);
+            charIndex = 0;
+            charDone = {};
+            loadedCount = 0;
+
+            // 移动端加载后收起键盘
+            document.getElementById('charInput').blur();
+
+            createAllGrids();
+        }
+
+        // ========== 自适应格子尺寸 ==========
+        function calcCellSize(count) {
+            var vw = window.innerWidth;
+            var appPad = vw <= 360 ? 20 : 32; // .app 左右 padding 合计
+            var available = Math.min(vw, 600) - appPad;
+            var gap = vw <= 360 ? 6 : 10;
+
+            if (count === 1) {
+                // 单字尽量大，但不超过可用宽度和 220px
+                var s = Math.min(220, available * 0.6);
+                return { size: Math.round(s), padding: Math.round(s * 0.07) };
             }
-            if (!/[\u4e00-\u9fff]/.test(input)) {
-                alert('请输入一个有效的汉字！');
-                return;
+
+            // 多字：先算一行能放几个
+            // 手机上 4 个字一行比较舒服，超过就换行
+            var perRow = count;
+            var idealSize = Math.floor((available - gap * (perRow - 1)) / perRow);
+
+            // 如果单行放不下（< 70px），减少每行个数
+            if (idealSize < 70) {
+                perRow = Math.max(2, Math.floor((available + gap) / (70 + gap)));
+                idealSize = Math.floor((available - gap * (perRow - 1)) / perRow);
             }
 
-            currentChar = input;
-            var target = document.getElementById('writer-target');
-            target.innerHTML = '';
-            currentStroke = 0;
-            quizMistakes = 0;
-            quizCorrect = 0;
-            updateScoreBar();
+            var cellSize = Math.max(60, Math.min(120, idealSize));
+            return { size: cellSize, padding: Math.max(4, Math.round(cellSize * 0.05)) };
+        }
 
-            var isQuiz = currentMode === 'quiz';
+        // ========== 创建所有格子 ==========
+        function createAllGrids() {
+            var row = document.getElementById('gridsRow');
+            row.innerHTML = '';
+            writers = [];
+            writerStrokes = [];
 
-            writer = HanziWriter.create('writer-target', currentChar, {
-                width: 300,
-                height: 300,
-                padding: 20,
+            var calc = calcCellSize(charArray.length);
+            var cellSize = calc.size;
+            var cellPadding = calc.padding;
+
+            for (var i = 0; i < charArray.length; i++) {
+                var cell = document.createElement('div');
+                cell.className = 'grid-cell' + (i === 0 ? ' active' : '');
+                cell.style.width = cellSize + 'px';
+                cell.style.height = cellSize + 'px';
+                cell.setAttribute('data-index', i);
+                cell.onclick = (function(idx) {
+                    return function() { selectChar(idx); };
+                })(i);
+
+                // 田字格线
+                var svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+                svg.setAttribute('class', 'grid-lines');
+                svg.setAttribute('viewBox', '0 0 100 100');
+                svg.innerHTML =
+                    '<line x1="50" y1="0" x2="50" y2="100"/>' +
+                    '<line x1="0" y1="50" x2="100" y2="50"/>' +
+                    '<line x1="0" y1="0" x2="100" y2="100"/>' +
+                    '<line x1="100" y1="0" x2="0" y2="100"/>';
+                cell.appendChild(svg);
+
+                var writerDiv = document.createElement('div');
+                writerDiv.className = 'writer-div';
+                writerDiv.id = 'writer-' + i;
+                cell.appendChild(writerDiv);
+
+                row.appendChild(cell);
+                createWriter(i, charArray[i], cellSize, cellPadding);
+            }
+
+            charIndex = 0;
+            currentChar = charArray[0];
+            updateActiveUI();
+        }
+
+        function createWriter(index, char, size, padding) {
+            var w = HanziWriter.create('writer-' + index, char, {
+                width: size,
+                height: size,
+                padding: padding,
                 showCharacter: false,
                 showOutline: true,
                 strokeColor: '#333',
                 outlineColor: '#ddd',
-                drawingColor: '#4a90d9',       // 用户手写笔画颜色
-                drawingWidth: 6,
+                drawingColor: '#4a90d9',
+                drawingWidth: size > 150 ? 6 : (size > 90 ? 4 : 3),
                 strokeAnimationSpeed: 1,
                 delayBetweenStrokes: 0,
-                highlightColor: '#aad4ff',     // 提示高亮颜色
-                showHintAfterMisses: 3,        // 错3次自动提示
+                highlightColor: '#aad4ff',
+                showHintAfterMisses: 3,
                 highlightOnComplete: true,
                 radicalColor: '#333',
-                charDataLoader: function (char, onLoad) {
-                    fetch('https://cdn.jsdelivr.net/npm/hanzi-writer-data@2.0/' + char + '.json')
+                charDataLoader: function (c, onLoad) {
+                    fetch('https://cdn.jsdelivr.net/npm/hanzi-writer-data@2.0/' + c + '.json')
                         .then(function(res) {
                             if (!res.ok) throw new Error('找不到该汉字数据');
                             return res.json();
                         })
                         .then(function(data) {
-                            totalStrokes = data.strokes.length;
+                            writerStrokes[index] = data.strokes.length;
                             onLoad(data);
-
-                            // 数据加载后再进入对应模式
-                            if (isQuiz) {
-                                enableQuizButtons();
-                                startQuiz();
-                            } else {
-                                updateInfo();
-                                enableDemoButtons();
-                            }
+                            loadedCount++;
+                            if (loadedCount === charArray.length) onAllLoaded();
                         })
                         .catch(function() {
-                            alert('无法加载该汉字的笔画数据！');
-                            disableDemoButtons();
+                            writerStrokes[index] = 0;
+                            loadedCount++;
+                            if (loadedCount === charArray.length) onAllLoaded();
                         });
                 }
             });
+            writers[index] = w;
+        }
+
+        function onAllLoaded() {
+            writer = writers[charIndex];
+            totalStrokes = writerStrokes[charIndex] || 0;
+            currentStroke = 0;
+            quizMistakes = 0;
+            quizCorrect = 0;
+            updateScoreBar();
+
+            if (currentMode === 'quiz') {
+                enableQuizButtons();
+                startQuiz();
+            } else {
+                updateInfo();
+                enableDemoButtons();
+            }
+        }
+
+        function reloadAll() {
+            loadedCount = 0;
+            charDone = {};
+            charIndex = 0;
+            createAllGrids();
+        }
+
+        // ========== 选字 ==========
+        function selectChar(idx) {
+            if (idx === charIndex) return;
+            charIndex = idx;
+            currentChar = charArray[idx];
+            writer = writers[idx];
+            totalStrokes = writerStrokes[idx] || 0;
+            currentStroke = 0;
+            quizMistakes = 0;
+            quizCorrect = 0;
+            updateScoreBar();
+            updateActiveUI();
+
+            if (currentMode === 'quiz') {
+                startQuiz();
+            } else {
+                updateInfo();
+                enableDemoButtons();
+            }
+        }
+
+        function updateActiveUI() {
+            var cells = document.querySelectorAll('.grid-cell');
+            for (var i = 0; i < cells.length; i++) {
+                cells[i].classList.toggle('active', i === charIndex);
+                cells[i].classList.toggle('done', !!charDone[i]);
+            }
         }
 
         // ========== 演示模式 ==========
@@ -387,13 +605,21 @@
                 onComplete: function () {
                     currentStroke++;
                     updateInfo();
+                    // 有了新笔画，可以重复
+                    document.getElementById('replayBtn').disabled = false;
                     if (currentStroke >= totalStrokes) {
                         document.getElementById('nextStrokeBtn').disabled = true;
                         document.getElementById('strokeInfo').innerHTML =
-                            '书写完成！共 <span class="highlight">' + totalStrokes + '</span> 笔 ✅';
+                            '「' + currentChar + '」完成！共 <span class="highlight">' + totalStrokes + '</span> 笔 ✅';
                     }
                 }
             });
+        }
+
+        function replayStroke() {
+            if (!writer || currentStroke <= 0) return;
+            // 重播上一笔（不改变 currentStroke，纯粹重新动画演示）
+            writer.animateStroke(currentStroke - 1);
         }
 
         function resetStrokes() {
@@ -403,6 +629,7 @@
             writer.showOutline();
             updateInfo();
             document.getElementById('nextStrokeBtn').disabled = false;
+            document.getElementById('replayBtn').disabled = true;
         }
 
         function animateAll() {
@@ -415,19 +642,20 @@
             document.getElementById('animateBtn').disabled = true;
             document.getElementById('resetBtn').disabled = true;
 
-            function animateNext(strokeNum) {
-                if (strokeNum >= totalStrokes) {
+            function animateNext(n) {
+                if (n >= totalStrokes) {
                     document.getElementById('strokeInfo').innerHTML =
-                        '书写完成！共 <span class="highlight">' + totalStrokes + '</span> 笔 ✅';
+                        '「' + currentChar + '」完成！共 <span class="highlight">' + totalStrokes + '</span> 笔 ✅';
                     document.getElementById('animateBtn').disabled = false;
                     document.getElementById('resetBtn').disabled = false;
+                    if (charArray.length > 1) autoAdvance();
                     return;
                 }
-                writer.animateStroke(strokeNum, {
+                writer.animateStroke(n, {
                     onComplete: function () {
-                        currentStroke = strokeNum + 1;
+                        currentStroke = n + 1;
                         updateInfo();
-                        animateNext(strokeNum + 1);
+                        animateNext(n + 1);
                     }
                 });
             }
@@ -436,22 +664,24 @@
 
         function updateInfo() {
             document.getElementById('strokeInfo').innerHTML =
-                '当前进度：<span class="highlight">' + currentStroke + '</span> / ' + totalStrokes + ' 笔';
+                '「' + currentChar + '」<span class="highlight">' + currentStroke + '</span> / ' + totalStrokes + ' 笔';
         }
 
         function enableDemoButtons() {
             document.getElementById('nextStrokeBtn').disabled = false;
+            document.getElementById('replayBtn').disabled = (currentStroke <= 0);
             document.getElementById('resetBtn').disabled = false;
             document.getElementById('animateBtn').disabled = false;
         }
 
         function disableDemoButtons() {
             document.getElementById('nextStrokeBtn').disabled = true;
+            document.getElementById('replayBtn').disabled = true;
             document.getElementById('resetBtn').disabled = true;
             document.getElementById('animateBtn').disabled = true;
         }
 
-        // ========== 自己写模式 (Quiz) ==========
+        // ========== Quiz ==========
         function startQuiz() {
             if (!writer) return;
             currentStroke = 0;
@@ -459,44 +689,40 @@
             quizCorrect = 0;
             updateScoreBar();
 
-            // 重置显示
             writer.hideCharacter();
             writer.showOutline();
 
             document.getElementById('strokeInfo').innerHTML =
-                '请用鼠标或手指在田字格中书写，第 <span class="highlight">1</span> / ' + totalStrokes + ' 笔';
+                '在「' + currentChar + '」格中书写 第 <span class="highlight">1</span> / ' + totalStrokes + ' 笔';
 
             writer.quiz({
                 onCorrectStroke: function (data) {
                     quizCorrect++;
                     currentStroke = data.strokeNum + 1;
                     updateScoreBar();
-
                     if (currentStroke < totalStrokes) {
                         document.getElementById('strokeInfo').innerHTML =
-                            '<span class="correct">✓ 正确！</span> 请写第 <span class="highlight">' +
+                            '<span class="correct">✓</span> 第 <span class="highlight">' +
                             (currentStroke + 1) + '</span> / ' + totalStrokes + ' 笔';
                     }
                 },
                 onMistake: function (data) {
                     quizMistakes++;
                     updateScoreBar();
-
-                    var hint = data.mistakesOnStroke >= 2
-                        ? '，再错1次将显示提示'
-                        : '';
+                    var hint = data.mistakesOnStroke >= 2 ? '，再错1次显示提示' : '';
                     document.getElementById('strokeInfo').innerHTML =
-                        '<span class="wrong">✗ 笔画不对，再试试！' + hint + '</span>';
+                        '<span class="wrong">✗ 再试试' + hint + '</span>';
                 },
                 onComplete: function (data) {
                     currentStroke = totalStrokes;
-                    var msg = '🎉 书写完成！';
+                    var msg = '🎉「' + currentChar + '」完成！';
                     if (data.totalMistakes === 0) {
-                        msg += ' 太棒了，一笔都没错！';
+                        msg += ' 零失误！';
                     } else {
-                        msg += ' 共错了 <span class="wrong">' + data.totalMistakes + '</span> 次';
+                        msg += ' 错了 <span class="wrong">' + data.totalMistakes + '</span> 次';
                     }
                     document.getElementById('strokeInfo').innerHTML = msg;
+                    if (charArray.length > 1) autoAdvance();
                 }
             });
         }
@@ -510,9 +736,52 @@
             document.getElementById('mistakeCount').textContent = quizMistakes;
         }
 
-        // ========== 回车键加载 ==========
+        // ========== 自动跳转 ==========
+        function markCurrentDone() {
+            charDone[charIndex] = true;
+            updateActiveUI();
+        }
+
+        function autoAdvance() {
+            if (charArray.length <= 1) return;
+            markCurrentDone();
+
+            for (var i = 1; i <= charArray.length; i++) {
+                var idx = (charIndex + i) % charArray.length;
+                if (!charDone[idx]) {
+                    (function(nextIdx) {
+                        setTimeout(function() { selectChar(nextIdx); }, 800);
+                    })(idx);
+                    return;
+                }
+            }
+            setTimeout(function() {
+                document.getElementById('strokeInfo').innerHTML =
+                    '🎉 全部 <span class="highlight">' + charArray.length + '</span> 个字完成！';
+            }, 800);
+        }
+
+        // ========== 回车加载 ==========
         document.getElementById('charInput').addEventListener('keydown', function (e) {
             if (e.key === 'Enter') loadCharacter();
+        });
+
+        // ========== resize 重排 ==========
+        var resizeTimer = null;
+        window.addEventListener('resize', function() {
+            if (resizeTimer) clearTimeout(resizeTimer);
+            resizeTimer = setTimeout(function() {
+                if (charArray.length > 0) {
+                    var savedDone = {};
+                    for (var k in charDone) savedDone[k] = charDone[k];
+                    var savedIndex = charIndex;
+                    createAllGrids();
+                    charDone = savedDone;
+                    charIndex = savedIndex;
+                    currentChar = charArray[charIndex];
+                    updateActiveUI();
+                }
+            }, 300);
         });
     </script>
 </body>
