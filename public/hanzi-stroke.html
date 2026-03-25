@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>汉字笔画书写</title>
+    <script src="https://cdn.jsdelivr.net/npm/hanzi-writer@3.5/dist/hanzi-writer.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: #f0f4f8;
+            font-family: -apple-system, "Microsoft YaHei", sans-serif;
+        }
+
+        h1 {
+            font-size: 28px;
+            color: #333;
+            margin-bottom: 30px;
+        }
+
+        .controls {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 20px;
+            align-items: center;
+        }
+
+        .controls input {
+            width: 120px;
+            height: 46px;
+            text-align: center;
+            font-size: 24px;
+            border: 2px solid #ccc;
+            border-radius: 8px;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+
+        .controls input:focus {
+            border-color: #4a90d9;
+        }
+
+        .btn {
+            height: 46px;
+            padding: 0 24px;
+            font-size: 16px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-weight: 600;
+        }
+
+        .btn:active {
+            transform: scale(0.96);
+        }
+
+        .btn-primary {
+            background: #4a90d9;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #3a7bc8;
+        }
+
+        .btn-stroke {
+            background: #e8533e;
+            color: white;
+        }
+
+        .btn-stroke:hover {
+            background: #d4432e;
+        }
+
+        .btn-reset {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn-reset:hover {
+            background: #5a6268;
+        }
+
+        .btn-animate {
+            background: #28a745;
+            color: white;
+        }
+
+        .btn-animate:hover {
+            background: #218838;
+        }
+
+        .btn-quiz {
+            background: #f5a623;
+            color: white;
+        }
+
+        .btn-quiz:hover {
+            background: #e09515;
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* 模式切换标签 */
+        .mode-tabs {
+            display: flex;
+            gap: 0;
+            margin-bottom: 20px;
+            border-radius: 10px;
+            overflow: hidden;
+            border: 2px solid #4a90d9;
+        }
+
+        .mode-tab {
+            padding: 10px 28px;
+            font-size: 15px;
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s;
+            background: #fff;
+            color: #4a90d9;
+        }
+
+        .mode-tab.active {
+            background: #4a90d9;
+            color: #fff;
+        }
+
+        .mode-tab:hover:not(.active) {
+            background: #e8f0fb;
+        }
+
+        /* 田字格容器 */
+        .grid-wrapper {
+            position: relative;
+            width: 300px;
+            height: 300px;
+            border: 3px solid #b22222;
+            background: #fff;
+        }
+
+        /* 田字格线 - 虚线 */
+        .grid-wrapper::before,
+        .grid-wrapper::after {
+            content: '';
+            position: absolute;
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        /* 横中线 */
+        .grid-wrapper::before {
+            top: 50%;
+            left: 0;
+            right: 0;
+            border-top: 1px dashed #b22222;
+        }
+
+        /* 竖中线 */
+        .grid-wrapper::after {
+            left: 50%;
+            top: 0;
+            bottom: 0;
+            border-left: 1px dashed #b22222;
+        }
+
+        /* 对角线 */
+        .diagonal-line {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        .diagonal-line line {
+            stroke: #b22222;
+            stroke-width: 0.5;
+            stroke-dasharray: 6, 4;
+        }
+
+        #writer-target {
+            position: relative;
+            z-index: 2;
+        }
+
+        .info {
+            margin-top: 20px;
+            font-size: 16px;
+            color: #666;
+            min-height: 28px;
+            text-align: center;
+        }
+
+        .info .highlight {
+            color: #e8533e;
+            font-weight: bold;
+            font-size: 20px;
+        }
+
+        .info .correct {
+            color: #28a745;
+        }
+
+        .info .wrong {
+            color: #e8533e;
+        }
+
+        .button-row {
+            display: flex;
+            gap: 12px;
+            margin-top: 16px;
+            min-height: 46px;
+        }
+
+        /* 成绩统计 */
+        .score-bar {
+            display: flex;
+            gap: 24px;
+            margin-top: 8px;
+            font-size: 14px;
+            color: #888;
+        }
+
+        .score-bar span {
+            font-weight: 600;
+        }
+
+        .score-bar .correct-count {
+            color: #28a745;
+        }
+
+        .score-bar .mistake-count {
+            color: #e8533e;
+        }
+    </style>
+</head>
+<body>
+    <h1>汉字笔画练习</h1>
+
+    <div class="controls">
+        <input type="text" id="charInput" maxlength="1" placeholder="输入汉字" />
+        <button class="btn btn-primary" id="loadBtn" onclick="loadCharacter()">加载</button>
+    </div>
+
+    <!-- 模式切换 -->
+    <div class="mode-tabs">
+        <button class="mode-tab active" id="tabDemo" onclick="switchMode('demo')">📖 演示模式</button>
+        <button class="mode-tab" id="tabQuiz" onclick="switchMode('quiz')">✍️ 自己写</button>
+    </div>
+
+    <div class="grid-wrapper">
+        <svg class="diagonal-line" viewBox="0 0 300 300">
+            <line x1="0" y1="0" x2="300" y2="300" />
+            <line x1="300" y1="0" x2="0" y2="300" />
+        </svg>
+        <div id="writer-target"></div>
+    </div>
+
+    <div class="info" id="strokeInfo">请输入一个汉字并点击「加载」</div>
+    <div class="score-bar" id="scoreBar" style="display:none;">
+        <div>✅ 正确：<span class="correct-count" id="correctCount">0</span></div>
+        <div>❌ 错误：<span class="mistake-count" id="mistakeCount">0</span></div>
+    </div>
+
+    <div class="button-row" id="demoButtons">
+        <button class="btn btn-stroke" id="nextStrokeBtn" onclick="showNextStroke()" disabled>下一笔</button>
+        <button class="btn btn-reset" id="resetBtn" onclick="resetStrokes()" disabled>重置</button>
+        <button class="btn btn-animate" id="animateBtn" onclick="animateAll()" disabled>自动书写</button>
+    </div>
+
+    <div class="button-row" id="quizButtons" style="display:none;">
+        <button class="btn btn-reset" id="quizResetBtn" onclick="startQuiz()" disabled>重新开始</button>
+    </div>
+
+    <script>
+        let writer = null;
+        let currentStroke = 0;
+        let totalStrokes = 0;
+        let currentMode = 'demo';  // 'demo' 或 'quiz'
+        let currentChar = '';
+        let quizMistakes = 0;
+        let quizCorrect = 0;
+
+        // ========== 模式切换 ==========
+        function switchMode(mode) {
+            currentMode = mode;
+
+            document.getElementById('tabDemo').classList.toggle('active', mode === 'demo');
+            document.getElementById('tabQuiz').classList.toggle('active', mode === 'quiz');
+            document.getElementById('demoButtons').style.display = mode === 'demo' ? 'flex' : 'none';
+            document.getElementById('quizButtons').style.display = mode === 'quiz' ? 'flex' : 'none';
+            document.getElementById('scoreBar').style.display = mode === 'quiz' ? 'flex' : 'none';
+
+            // 如果已加载了汉字，切换模式时重新加载
+            if (currentChar) {
+                loadCharacter();
+            }
+        }
+
+        // ========== 加载汉字 ==========
+        function loadCharacter() {
+            var input = document.getElementById('charInput').value.trim();
+            if (!input) {
+                alert('请输入一个汉字！');
+                return;
+            }
+            if (!/[\u4e00-\u9fff]/.test(input)) {
+                alert('请输入一个有效的汉字！');
+                return;
+            }
+
+            currentChar = input;
+            var target = document.getElementById('writer-target');
+            target.innerHTML = '';
+            currentStroke = 0;
+            quizMistakes = 0;
+            quizCorrect = 0;
+            updateScoreBar();
+
+            var isQuiz = currentMode === 'quiz';
+
+            writer = HanziWriter.create('writer-target', currentChar, {
+                width: 300,
+                height: 300,
+                padding: 20,
+                showCharacter: false,
+                showOutline: true,
+                strokeColor: '#333',
+                outlineColor: '#ddd',
+                drawingColor: '#4a90d9',       // 用户手写笔画颜色
+                drawingWidth: 6,
+                strokeAnimationSpeed: 1,
+                delayBetweenStrokes: 0,
+                highlightColor: '#aad4ff',     // 提示高亮颜色
+                showHintAfterMisses: 3,        // 错3次自动提示
+                highlightOnComplete: true,
+                radicalColor: '#333',
+                charDataLoader: function (char, onLoad) {
+                    fetch('https://cdn.jsdelivr.net/npm/hanzi-writer-data@2.0/' + char + '.json')
+                        .then(function(res) {
+                            if (!res.ok) throw new Error('找不到该汉字数据');
+                            return res.json();
+                        })
+                        .then(function(data) {
+                            totalStrokes = data.strokes.length;
+                            onLoad(data);
+
+                            // 数据加载后再进入对应模式
+                            if (isQuiz) {
+                                enableQuizButtons();
+                                startQuiz();
+                            } else {
+                                updateInfo();
+                                enableDemoButtons();
+                            }
+                        })
+                        .catch(function() {
+                            alert('无法加载该汉字的笔画数据！');
+                            disableDemoButtons();
+                        });
+                }
+            });
+        }
+
+        // ========== 演示模式 ==========
+        function showNextStroke() {
+            if (!writer || currentStroke >= totalStrokes) return;
+            writer.animateStroke(currentStroke, {
+                onComplete: function () {
+                    currentStroke++;
+                    updateInfo();
+                    if (currentStroke >= totalStrokes) {
+                        document.getElementById('nextStrokeBtn').disabled = true;
+                        document.getElementById('strokeInfo').innerHTML =
+                            '书写完成！共 <span class="highlight">' + totalStrokes + '</span> 笔 ✅';
+                    }
+                }
+            });
+        }
+
+        function resetStrokes() {
+            if (!writer) return;
+            currentStroke = 0;
+            writer.hideCharacter();
+            writer.showOutline();
+            updateInfo();
+            document.getElementById('nextStrokeBtn').disabled = false;
+        }
+
+        function animateAll() {
+            if (!writer) return;
+            currentStroke = 0;
+            writer.hideCharacter();
+            writer.showOutline();
+            updateInfo();
+            document.getElementById('nextStrokeBtn').disabled = true;
+            document.getElementById('animateBtn').disabled = true;
+            document.getElementById('resetBtn').disabled = true;
+
+            function animateNext(strokeNum) {
+                if (strokeNum >= totalStrokes) {
+                    document.getElementById('strokeInfo').innerHTML =
+                        '书写完成！共 <span class="highlight">' + totalStrokes + '</span> 笔 ✅';
+                    document.getElementById('animateBtn').disabled = false;
+                    document.getElementById('resetBtn').disabled = false;
+                    return;
+                }
+                writer.animateStroke(strokeNum, {
+                    onComplete: function () {
+                        currentStroke = strokeNum + 1;
+                        updateInfo();
+                        animateNext(strokeNum + 1);
+                    }
+                });
+            }
+            animateNext(0);
+        }
+
+        function updateInfo() {
+            document.getElementById('strokeInfo').innerHTML =
+                '当前进度：<span class="highlight">' + currentStroke + '</span> / ' + totalStrokes + ' 笔';
+        }
+
+        function enableDemoButtons() {
+            document.getElementById('nextStrokeBtn').disabled = false;
+            document.getElementById('resetBtn').disabled = false;
+            document.getElementById('animateBtn').disabled = false;
+        }
+
+        function disableDemoButtons() {
+            document.getElementById('nextStrokeBtn').disabled = true;
+            document.getElementById('resetBtn').disabled = true;
+            document.getElementById('animateBtn').disabled = true;
+        }
+
+        // ========== 自己写模式 (Quiz) ==========
+        function startQuiz() {
+            if (!writer) return;
+            currentStroke = 0;
+            quizMistakes = 0;
+            quizCorrect = 0;
+            updateScoreBar();
+
+            // 重置显示
+            writer.hideCharacter();
+            writer.showOutline();
+
+            document.getElementById('strokeInfo').innerHTML =
+                '请用鼠标或手指在田字格中书写，第 <span class="highlight">1</span> / ' + totalStrokes + ' 笔';
+
+            writer.quiz({
+                onCorrectStroke: function (data) {
+                    quizCorrect++;
+                    currentStroke = data.strokeNum + 1;
+                    updateScoreBar();
+
+                    if (currentStroke < totalStrokes) {
+                        document.getElementById('strokeInfo').innerHTML =
+                            '<span class="correct">✓ 正确！</span> 请写第 <span class="highlight">' +
+                            (currentStroke + 1) + '</span> / ' + totalStrokes + ' 笔';
+                    }
+                },
+                onMistake: function (data) {
+                    quizMistakes++;
+                    updateScoreBar();
+
+                    var hint = data.mistakesOnStroke >= 2
+                        ? '，再错1次将显示提示'
+                        : '';
+                    document.getElementById('strokeInfo').innerHTML =
+                        '<span class="wrong">✗ 笔画不对，再试试！' + hint + '</span>';
+                },
+                onComplete: function (data) {
+                    currentStroke = totalStrokes;
+                    var msg = '🎉 书写完成！';
+                    if (data.totalMistakes === 0) {
+                        msg += ' 太棒了，一笔都没错！';
+                    } else {
+                        msg += ' 共错了 <span class="wrong">' + data.totalMistakes + '</span> 次';
+                    }
+                    document.getElementById('strokeInfo').innerHTML = msg;
+                }
+            });
+        }
+
+        function enableQuizButtons() {
+            document.getElementById('quizResetBtn').disabled = false;
+        }
+
+        function updateScoreBar() {
+            document.getElementById('correctCount').textContent = quizCorrect;
+            document.getElementById('mistakeCount').textContent = quizMistakes;
+        }
+
+        // ========== 回车键加载 ==========
+        document.getElementById('charInput').addEventListener('keydown', function (e) {
+            if (e.key === 'Enter') loadCharacter();
+        });
+    </script>
+</body>
+</html>
