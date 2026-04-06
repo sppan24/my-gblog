@@ -805,12 +805,12 @@
             if (!writer || currentStroke >= totalStrokes) return;
             cancelAdvance();
             disableDemoButtons();
+            // 语音播报当前笔画（笔画开始时）
+            if (voiceEnabled && charStrokeNames[charIndex] && charStrokeNames[charIndex][currentStroke]) {
+                speakStrokeName(charStrokeNames[charIndex][currentStroke]);
+            }
             writer.animateStroke(currentStroke, {
                 onComplete: function () {
-                    // 语音播报当前笔画
-                    if (voiceEnabled && charStrokeNames[charIndex] && charStrokeNames[charIndex][currentStroke]) {
-                        speakStrokeName(charStrokeNames[charIndex][currentStroke]);
-                    }
                     currentStroke++;
                     updateInfo();
                     enableDemoButtons();
@@ -827,12 +827,12 @@
         function replayStroke() {
             if (!writer || currentStroke <= 0) return;
             disableDemoButtons();
+            // 语音播报重复的笔画（笔画开始时）
+            if (voiceEnabled && charStrokeNames[charIndex] && charStrokeNames[charIndex][currentStroke - 1]) {
+                speakStrokeName(charStrokeNames[charIndex][currentStroke - 1]);
+            }
             writer.animateStroke(currentStroke - 1, {
                 onComplete: function () {
-                    // 语音播报重复的笔画
-                    if (voiceEnabled && charStrokeNames[charIndex] && charStrokeNames[charIndex][currentStroke - 1]) {
-                        speakStrokeName(charStrokeNames[charIndex][currentStroke - 1]);
-                    }
                     enableDemoButtons();
                     if (currentStroke >= totalStrokes) {
                         document.getElementById('nextStrokeBtn').disabled = true;
@@ -890,19 +890,29 @@
                     if (charArray.length > 1) autoAdvance();
                     return;
                 }
+                // 语音播报当前笔画（笔画开始时），动画与语音同时进行，
+                // 两者都结束后再进入下一笔
+                var voiceDone = false, animDone = false;
+                function tryNext() {
+                    if (voiceDone && animDone && isAnimating && charIndex === lockedIndex) {
+                        animateNext(n + 1);
+                    }
+                }
+                if (voiceEnabled && charStrokeNames[lockedIndex] && charStrokeNames[lockedIndex][n]) {
+                    speakStrokeName(charStrokeNames[lockedIndex][n], function () {
+                        voiceDone = true;
+                        tryNext();
+                    });
+                } else {
+                    voiceDone = true;
+                }
                 lockedWriter.animateStroke(n, {
                     onComplete: function () {
                         if (!isAnimating || charIndex !== lockedIndex) return;
                         currentStroke = n + 1;
                         updateInfo();
-                        // 语音播报当前笔画，等语音结束后再进入下一笔
-                        if (voiceEnabled && charStrokeNames[lockedIndex] && charStrokeNames[lockedIndex][n]) {
-                            speakStrokeName(charStrokeNames[lockedIndex][n], function () {
-                                if (isAnimating && charIndex === lockedIndex) animateNext(n + 1);
-                            });
-                        } else {
-                            animateNext(n + 1);
-                        }
+                        animDone = true;
+                        tryNext();
                     }
                 });
             }
