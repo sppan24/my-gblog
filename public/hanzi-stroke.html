@@ -228,6 +228,47 @@
             height: 100%;
         }
 
+        /* ========== 笔顺展示栏 ========== */
+        .stroke-order-bar {
+            display: flex;
+            gap: 4px;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin-top: 6px;
+            min-height: 0;
+            padding: 0 12px;
+        }
+
+        .stroke-order-bar:empty {
+            display: none;
+        }
+
+        .stroke-order-item {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2px 8px;
+            font-size: 13px;
+            border-radius: 4px;
+            background: #f0f0f0;
+            color: #999;
+            transition: all 0.2s;
+            line-height: 1.4;
+        }
+
+        .stroke-order-item.done {
+            background: #e8f5e9;
+            color: #28a745;
+            font-weight: 600;
+        }
+
+        .stroke-order-item.current {
+            background: #e3f2fd;
+            color: #4a90d9;
+            font-weight: 600;
+            box-shadow: 0 0 0 2px rgba(74, 144, 217, 0.3);
+        }
+
         /* ========== 信息提示 ========== */
         .info {
             margin-top: 8px;
@@ -485,6 +526,7 @@
         <!-- Quiz 模式切字标签 -->
         <div class="quiz-char-tabs" id="quizCharTabs"></div>
 
+        <div class="stroke-order-bar" id="strokeOrderBar"></div>
         <div class="info" id="strokeInfo">请输入汉字并点击「加载」</div>
         <div class="score-bar" id="scoreBar" style="display:none;">
             <div>✅ 正确：<span class="correct-count" id="correctCount">0</span></div>
@@ -693,6 +735,7 @@
             quizCorrect = 0;
             updateScoreBar();
             document.getElementById('voiceToggleWrap').style.display = 'flex';
+            renderStrokeOrderBar();
 
             if (currentMode === 'quiz') {
                 enableQuizButtons();
@@ -734,8 +777,7 @@
             quizCorrect = 0;
             updateScoreBar();
             updateActiveUI();
-
-            // 重置当前字的 writer 显示状态
+            renderStrokeOrderBar();
             if (writer) {
                 writer.hideCharacter();
                 writer.showOutline();
@@ -870,6 +912,7 @@
         function updateInfo() {
             document.getElementById('strokeInfo').innerHTML =
                 '「' + currentChar + '」<span class="highlight">' + currentStroke + '</span> / ' + totalStrokes + ' 笔';
+            updateStrokeOrderBar();
         }
 
         function enableDemoButtons() {
@@ -886,9 +929,31 @@
             document.getElementById('animateBtn').disabled = true;
         }
 
+        // ========== 笔顺展示栏 ==========
+        function renderStrokeOrderBar() {
+            var bar = document.getElementById('strokeOrderBar');
+            bar.innerHTML = '';
+            var names = charStrokeNames[charIndex];
+            if (!names || names.length === 0) return;
+            for (var i = 0; i < names.length; i++) {
+                var span = document.createElement('span');
+                span.className = 'stroke-order-item';
+                span.textContent = (i + 1) + '.' + getStrokeDisplayName(names[i]);
+                bar.appendChild(span);
+            }
+            updateStrokeOrderBar();
+        }
+
+        function updateStrokeOrderBar() {
+            var items = document.querySelectorAll('.stroke-order-item');
+            for (var i = 0; i < items.length; i++) {
+                items[i].classList.toggle('done', i < currentStroke);
+                items[i].classList.toggle('current', i === currentStroke);
+            }
+        }
+
         // ========== 笔画语音 ==========
 
-        // Web Speech API 语音播报
         // 获取笔画显示名称
         // cnchar 返回格式可能包含：变体数字后缀如"点2"、歧义分隔如"横撇|横钩"
         function getStrokeDisplayName(name) {
@@ -898,18 +963,56 @@
             return s.replace(/\d+$/, '');
         }
 
+        // 笔画名称 → 本地音频文件映射（单字 + 合并后的复合笔画）
+        var strokeVoiceMap = {
+            '横': 'voice/heng2.mp3',
+            '竖': 'voice/shu4.mp3',
+            '撇': 'voice/pie3.mp3',
+            '捺': 'voice/na4.mp3',
+            '点': 'voice/dian3.mp3',
+            '提': 'voice/ti2.mp3',
+            '折': 'voice/zhe2.mp3',
+            '钩': 'voice/gou1.mp3',
+            '弯': 'voice/wan1.mp3',
+            '斜': 'voice/xie2.mp3',
+            '弯钩': 'voice/wan1_gou1.mp3',
+            '撇折': 'voice/pie3_zhe2.mp3',
+            '撇点': 'voice/pie3_dian3.mp3',
+            '斜钩': 'voice/xie2_gou1.mp3',
+            '横折': 'voice/heng2_zhe2.mp3',
+            '横折折': 'voice/heng2_zhe2_zhe2.mp3',
+            '横折折折钩': 'voice/heng2_zhe2_zhe2_zhe2_gou1.mp3',
+            '横折折撇': 'voice/heng2_zhe2_zhe2_pie3.mp3',
+            '横折提': 'voice/heng2_zhe2_ti2.mp3',
+            '横折钩': 'voice/heng2_zhe2_gou1.mp3',
+            '横撇': 'voice/heng2_pie3.mp3',
+            '横斜钩': 'voice/heng2_xie2_gou1.mp3',
+            '竖弯': 'voice/shu4_wan1.mp3',
+            '竖弯钩': 'voice/shu4_wan1_gou1.mp3',
+            '竖折折钩': 'voice/shu4_zhe2_zhe2_gou1.mp3',
+            '竖折撇': 'voice/shu4_zhe2_pie3.mp3',
+            '竖提': 'voice/shu4_ti2.mp3',
+            '竖钩': 'voice/shu4_gou1.mp3'
+        };
+
+        // 预加载所有音频
+        var strokeAudioCache = {};
+        Object.keys(strokeVoiceMap).forEach(function (key) {
+            var audio = new Audio(strokeVoiceMap[key]);
+            audio.preload = 'auto';
+            strokeAudioCache[key] = audio;
+        });
+
         function speakStrokeName(name, onDone) {
-            if (!window.speechSynthesis) { if (onDone) onDone(); return; }
-            window.speechSynthesis.cancel();
-            var u = new SpeechSynthesisUtterance(getStrokeDisplayName(name));
-            u.lang = 'zh-CN';
-            u.rate = 0.9;
-            if (onDone) {
-                u.onend = onDone;
-                // 兜底：防止 onend 不触发
-                u.onerror = onDone;
+            var displayName = getStrokeDisplayName(name);
+            if (!displayName || !strokeAudioCache[displayName]) {
+                if (onDone) onDone();
+                return;
             }
-            window.speechSynthesis.speak(u);
+            var player = strokeAudioCache[displayName].cloneNode();
+            player.onended = function () { if (onDone) onDone(); };
+            player.onerror = function () { if (onDone) onDone(); };
+            player.play().catch(function () { if (onDone) onDone(); });
         }
 
         // ========== Quiz ==========
@@ -934,6 +1037,7 @@
                     quizCorrect++;
                     currentStroke = data.strokeNum + 1;
                     updateScoreBar();
+                    updateStrokeOrderBar();
 
                     // 语音播报当前笔画名称
                     if (voiceEnabled && charStrokeNames[charIndex] && charStrokeNames[charIndex][data.strokeNum]) {
@@ -959,6 +1063,7 @@
                 },
                 onComplete: function (data) {
                     currentStroke = totalStrokes;
+                    updateStrokeOrderBar();
                     var msg = '🎉「' + currentChar + '」完成！';
                     if (data.totalMistakes === 0) {
                         msg += ' 零失误！';
