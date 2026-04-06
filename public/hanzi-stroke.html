@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>汉字笔画书写</title>
     <script src="https://cdn.jsdelivr.net/npm/hanzi-writer@3.5/dist/hanzi-writer.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/cnchar/cnchar.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/cnchar-order/cnchar.order.min.js"></script>
     <style>
         * {
             margin: 0;
@@ -344,6 +346,27 @@
             color: #4a90d9;
         }
 
+        /* ========== 语音开关 ========== */
+        .voice-toggle {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            margin-bottom: 14px;
+            font-size: 14px;
+            color: #555;
+            cursor: pointer;
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
+        }
+
+        .voice-toggle input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            accent-color: #4a90d9;
+            cursor: pointer;
+        }
+
         /* ========== 响应式 ========== */
 
         /* 大屏 / 桌面 */
@@ -450,6 +473,12 @@
             <button class="mode-tab" id="tabQuiz" onclick="switchMode('quiz')">✍️ 自己写</button>
         </div>
 
+        <!-- 语音开关 -->
+        <label class="voice-toggle" id="voiceToggleWrap" style="display:none;">
+            <input type="checkbox" id="voiceToggle" checked />
+            <span>🔊 笔画语音</span>
+        </label>
+
         <!-- 小田字格横排 -->
         <div class="grids-row" id="gridsRow"></div>
 
@@ -491,6 +520,9 @@
         let charIndex = 0;
         let charDone = {};
         let loadedCount = 0;
+
+        let charStrokeNames = [];    // 每个字的笔画名称数组（来自 cnchar）
+        let voiceEnabled = true;     // 语音开关
 
         // ========== 模式切换 ==========
         function switchMode(mode) {
@@ -632,6 +664,13 @@
                         })
                         .then(function(data) {
                             writerStrokes[index] = data.strokes.length;
+                            // 使用 cnchar 获取笔画名称
+                            try {
+                                var names = cnchar.stroke(charArray[index], 'order', 'name');
+                                charStrokeNames[index] = (names && names[0]) ? names[0] : [];
+                            } catch (e) {
+                                charStrokeNames[index] = [];
+                            }
                             onLoad(data);
                             loadedCount++;
                             if (loadedCount === charArray.length) onAllLoaded();
@@ -653,6 +692,7 @@
             quizMistakes = 0;
             quizCorrect = 0;
             updateScoreBar();
+            document.getElementById('voiceToggleWrap').style.display = 'flex';
 
             if (currentMode === 'quiz') {
                 enableQuizButtons();
@@ -669,6 +709,7 @@
             loadedCount = 0;
             charDone = {};
             charIndex = 0;
+            charStrokeNames = [];
             createAllGrids();
         }
 
@@ -724,6 +765,10 @@
             disableDemoButtons();
             writer.animateStroke(currentStroke, {
                 onComplete: function () {
+                    // 语音播报当前笔画
+                    if (voiceEnabled && charStrokeNames[charIndex] && charStrokeNames[charIndex][currentStroke]) {
+                        speakStrokeName(charStrokeNames[charIndex][currentStroke]);
+                    }
                     currentStroke++;
                     updateInfo();
                     enableDemoButtons();
@@ -742,6 +787,10 @@
             disableDemoButtons();
             writer.animateStroke(currentStroke - 1, {
                 onComplete: function () {
+                    // 语音播报重复的笔画
+                    if (voiceEnabled && charStrokeNames[charIndex] && charStrokeNames[charIndex][currentStroke - 1]) {
+                        speakStrokeName(charStrokeNames[charIndex][currentStroke - 1]);
+                    }
                     enableDemoButtons();
                     if (currentStroke >= totalStrokes) {
                         document.getElementById('nextStrokeBtn').disabled = true;
@@ -804,7 +853,14 @@
                         if (!isAnimating || charIndex !== lockedIndex) return;
                         currentStroke = n + 1;
                         updateInfo();
-                        animateNext(n + 1);
+                        // 语音播报当前笔画，等语音结束后再进入下一笔
+                        if (voiceEnabled && charStrokeNames[lockedIndex] && charStrokeNames[lockedIndex][n]) {
+                            speakStrokeName(charStrokeNames[lockedIndex][n], function () {
+                                if (isAnimating && charIndex === lockedIndex) animateNext(n + 1);
+                            });
+                        } else {
+                            animateNext(n + 1);
+                        }
                     }
                 });
             }
@@ -830,6 +886,32 @@
             document.getElementById('animateBtn').disabled = true;
         }
 
+        // ========== 笔画语音 ==========
+
+        // Web Speech API 语音播报
+        // 获取笔画显示名称
+        // cnchar 返回格式可能包含：变体数字后缀如"点2"、歧义分隔如"横撇|横钩"
+        function getStrokeDisplayName(name) {
+            if (!name) return '';
+            var idx = name.indexOf('|');
+            var s = idx >= 0 ? name.substring(0, idx) : name;
+            return s.replace(/\d+$/, '');
+        }
+
+        function speakStrokeName(name, onDone) {
+            if (!window.speechSynthesis) { if (onDone) onDone(); return; }
+            window.speechSynthesis.cancel();
+            var u = new SpeechSynthesisUtterance(getStrokeDisplayName(name));
+            u.lang = 'zh-CN';
+            u.rate = 0.9;
+            if (onDone) {
+                u.onend = onDone;
+                // 兜底：防止 onend 不触发
+                u.onerror = onDone;
+            }
+            window.speechSynthesis.speak(u);
+        }
+
         // ========== Quiz ==========
         function startQuiz() {
             if (!writer) return;
@@ -852,9 +934,19 @@
                     quizCorrect++;
                     currentStroke = data.strokeNum + 1;
                     updateScoreBar();
+
+                    // 语音播报当前笔画名称
+                    if (voiceEnabled && charStrokeNames[charIndex] && charStrokeNames[charIndex][data.strokeNum]) {
+                        speakStrokeName(charStrokeNames[charIndex][data.strokeNum]);
+                    }
+
                     if (currentStroke < totalStrokes) {
+                        var nameLabel = '';
+                        if (charStrokeNames[charIndex] && charStrokeNames[charIndex][data.strokeNum]) {
+                            nameLabel = '（' + getStrokeDisplayName(charStrokeNames[charIndex][data.strokeNum]) + '）';
+                        }
                         document.getElementById('strokeInfo').innerHTML =
-                            '<span class="correct">✓</span> 第 <span class="highlight">' +
+                            '<span class="correct">✓ ' + nameLabel + '</span> 第 <span class="highlight">' +
                             (currentStroke + 1) + '</span> / ' + totalStrokes + ' 笔';
                     }
                 },
@@ -966,6 +1058,11 @@
         // ========== 回车加载 ==========
         document.getElementById('charInput').addEventListener('keydown', function (e) {
             if (e.key === 'Enter') loadCharacter();
+        });
+
+        // ========== 语音开关 ==========
+        document.getElementById('voiceToggle').addEventListener('change', function () {
+            voiceEnabled = this.checked;
         });
 
         // ========== resize 重排 ==========
