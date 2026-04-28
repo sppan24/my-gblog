@@ -2,12 +2,35 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>汉字笔画书写</title>
-    <script src="https://cdn.jsdelivr.net/npm/hanzi-writer@3.5/dist/hanzi-writer.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/cnchar/cnchar.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/cnchar-order/cnchar.order.min.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>小小练字</title>
+    <script src="./hanzi-writer.min.js"></script>
+    <script src="./cnchar.min.js"></script>
+    <script src="./cnchar.order.min.js"></script>
     <style>
+        :root {
+            --bg-top: #f6efe3;
+            --bg-bottom: #e7efe7;
+            --surface: rgba(255, 252, 247, 0.86);
+            --surface-strong: rgba(255, 255, 255, 0.94);
+            --surface-soft: rgba(246, 240, 230, 0.86);
+            --line: rgba(114, 90, 53, 0.12);
+            --text: #1f2a1f;
+            --text-muted: #647064;
+            --primary: #1f7a68;
+            --primary-strong: #185e51;
+            --accent: #c96f4b;
+            --accent-soft: rgba(201, 111, 75, 0.12);
+            --success: #2f8f5b;
+            --danger: #cf5b49;
+            --shadow: 0 18px 50px rgba(59, 49, 31, 0.12);
+            --shadow-soft: 0 8px 24px rgba(59, 49, 31, 0.08);
+            --radius-xl: 28px;
+            --radius-lg: 22px;
+            --radius-md: 16px;
+            --radius-sm: 12px;
+        }
+
         * {
             margin: 0;
             padding: 0;
@@ -15,161 +38,664 @@
             -webkit-tap-highlight-color: transparent;
         }
 
-        body {
-            min-height: 100vh;
-            min-height: -webkit-fill-available;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            background: #eef2f7;
-            font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
-            padding: 0;
+        html {
+            height: 100%;
+            overflow: hidden;
         }
 
-        /* ========== 主容器 - 卡片式 ========== */
+        body {
+            height: 100%;
+            height: 100dvh;
+            min-height: 100dvh;
+            overflow: hidden;
+            color: var(--text);
+            background:
+                radial-gradient(circle at top left, rgba(255, 255, 255, 0.72), transparent 36%),
+                radial-gradient(circle at bottom right, rgba(31, 122, 104, 0.14), transparent 34%),
+                linear-gradient(180deg, var(--bg-top) 0%, var(--bg-bottom) 100%);
+            font-family: "SF Pro Rounded", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+        }
+
+        body::before,
+        body::after {
+            content: '';
+            position: fixed;
+            inset: auto;
+            border-radius: 999px;
+            pointer-events: none;
+            filter: blur(6px);
+            opacity: 0.6;
+        }
+
+        body::before {
+            width: 220px;
+            height: 220px;
+            top: 10%;
+            right: -80px;
+            background: rgba(201, 111, 75, 0.16);
+        }
+
+        body::after {
+            width: 260px;
+            height: 260px;
+            bottom: -120px;
+            left: -80px;
+            background: rgba(31, 122, 104, 0.14);
+        }
+
         .app {
             width: 100%;
-            max-width: 600px;
+            max-width: 720px;
+            height: 100%;
+            margin: 0 auto;
+            padding: calc(18px + env(safe-area-inset-top, 0px)) 14px calc(98px + env(safe-area-inset-bottom, 0px));
+        }
+
+        .app-shell {
+            height: 100%;
+            overflow-y: auto;
             display: flex;
             flex-direction: column;
-            align-items: center;
-            padding: 24px 16px 32px;
-            min-height: 100vh;
+            gap: 14px;
+            padding-bottom: 6px;
+            border-radius: var(--radius-lg);
+            overflow-x: hidden;
+            -ms-overflow-style: none;
+            scrollbar-width: none;
         }
 
-        h1 {
-            font-size: 22px;
-            color: #2c3e50;
-            margin-bottom: 20px;
-            letter-spacing: 2px;
+        .app-shell::-webkit-scrollbar {
+            width: 0;
+            height: 0;
+            display: none;
         }
 
-        /* ========== 输入区域 ========== */
-        .controls {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 16px;
-            width: 100%;
-            max-width: 400px;
+        .hero-card,
+        .input-card,
+        .practice-card {
+            position: relative;
+            background: var(--surface);
+            border: 1px solid rgba(255, 255, 255, 0.7);
+            box-shadow: var(--shadow-soft);
+            backdrop-filter: blur(18px);
+            -webkit-backdrop-filter: blur(18px);
         }
 
-        .controls input {
-            flex: 1;
-            min-width: 0;
-            height: 44px;
-            text-align: center;
-            font-size: 20px;
-            border: 2px solid #d0d7de;
-            border-radius: 10px;
-            outline: none;
-            transition: border-color 0.3s, box-shadow 0.3s;
-            letter-spacing: 3px;
-            background: #fff;
-        }
-
-        .controls input:focus {
-            border-color: #4a90d9;
-            box-shadow: 0 0 0 3px rgba(74, 144, 217, 0.15);
-        }
-
-        .controls .btn {
-            flex-shrink: 0;
-        }
-
-        /* ========== 按钮通用 ========== */
-        .btn {
-            height: 44px;
-            padding: 0 20px;
-            font-size: 15px;
-            border: none;
-            border-radius: 10px;
-            cursor: pointer;
-            transition: all 0.15s;
-            font-weight: 600;
-            white-space: nowrap;
-        }
-
-        .btn:active {
-            transform: scale(0.95);
-            opacity: 0.85;
-        }
-
-        .btn-primary { background: #4a90d9; color: #fff; }
-        .btn-primary:hover { background: #3a7bc8; }
-
-        .btn-stroke { background: #e8533e; color: #fff; }
-        .btn-stroke:hover { background: #d4432e; }
-
-        .btn-reset { background: #6c757d; color: #fff; }
-        .btn-reset:hover { background: #5a6268; }
-
-        .btn-animate { background: #28a745; color: #fff; }
-        .btn-animate:hover { background: #218838; }
-
-        .btn-replay { background: #f5a623; color: #fff; }
-        .btn-replay:hover { background: #e09515; }
-
-        .btn:disabled {
-            opacity: 0.4;
-            cursor: not-allowed;
-            transform: none;
-        }
-
-        /* ========== 模式切换 ========== */
-        .mode-tabs {
-            display: flex;
-            margin-bottom: 18px;
-            border-radius: 10px;
+        .hero-card {
             overflow: hidden;
-            border: 2px solid #4a90d9;
-            width: 100%;
-            max-width: 280px;
+            padding: 18px 18px 16px;
+            border-radius: var(--radius-xl);
+            background:
+                linear-gradient(135deg, rgba(255, 251, 246, 0.96), rgba(244, 248, 244, 0.88)),
+                var(--surface);
+            box-shadow: var(--shadow);
         }
 
-        .mode-tab {
-            flex: 1;
-            padding: 9px 0;
-            font-size: 14px;
-            font-weight: 600;
-            border: none;
-            cursor: pointer;
-            transition: all 0.2s;
-            background: #fff;
-            color: #4a90d9;
-            text-align: center;
+        .hero-card::after {
+            content: '';
+            position: absolute;
+            right: -42px;
+            top: -40px;
+            width: 120px;
+            height: 120px;
+            border-radius: 28px;
+            background: linear-gradient(180deg, rgba(201, 111, 75, 0.16), rgba(31, 122, 104, 0.1));
+            transform: rotate(22deg);
         }
 
-        .mode-tab.active {
-            background: #4a90d9;
-            color: #fff;
+        .hero-top {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            position: relative;
+            z-index: 1;
         }
 
-        .mode-tab:hover:not(.active) {
-            background: #e8f0fb;
+        .hero-copy h1 {
+            font-size: 28px;
+            line-height: 1.2;
+            letter-spacing: 0.04em;
+            margin-bottom: 4px;
+            font-weight: 700;
         }
 
-        /* ========== 田字格区域 ========== */
-        .grids-row {
+        .hero-copy p {
+            color: var(--text-muted);
+            font-size: 13px;
+            line-height: 1.5;
+            max-width: 420px;
+        }
+
+        .hero-meta {
             display: flex;
             gap: 10px;
             flex-wrap: wrap;
-            justify-content: center;
-            margin-bottom: 6px;
+            margin-top: 10px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .meta-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            min-height: 34px;
+            padding: 0 12px;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.68);
+            border: 1px solid rgba(114, 90, 53, 0.08);
+            color: #4d584d;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .input-card,
+        .practice-card {
+            border-radius: var(--radius-lg);
+            padding: 14px;
+        }
+
+        .input-card {
+            background: linear-gradient(180deg, rgba(255, 253, 248, 0.96), rgba(247, 243, 236, 0.9));
+        }
+
+        .input-top {
+            margin-bottom: 10px;
+        }
+
+        .input-title-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            min-width: 0;
+        }
+
+        .input-body {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            padding: 14px;
+            border-radius: 20px;
+            background: rgba(255, 255, 255, 0.56);
+            border: 1px solid rgba(114, 90, 53, 0.08);
+        }
+
+        .section-head {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 12px;
+            margin-bottom: 14px;
+        }
+
+        .section-title {
+            font-size: 18px;
+            font-weight: 700;
+            letter-spacing: 0.04em;
+        }
+
+        .section-subtitle {
+            color: var(--text-muted);
+            font-size: 13px;
+            line-height: 1.5;
+            margin-top: 4px;
+        }
+
+        .controls {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) auto;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .controls input {
             width: 100%;
-            padding: 12px 0;
+            min-width: 0;
+            height: 54px;
+            padding: 0 18px;
+            text-align: left;
+            font-size: 22px;
+            border: 1px solid rgba(114, 90, 53, 0.12);
+            border-radius: 18px;
+            outline: none;
+            transition: border-color 0.25s, box-shadow 0.25s, background 0.25s;
+            letter-spacing: 0.16em;
+            color: var(--text);
+            background: var(--surface-strong);
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7);
+        }
+
+        .controls input::placeholder {
+            color: #98a198;
+            letter-spacing: 0.04em;
+            font-size: 16px;
+        }
+
+        .controls input:focus {
+            border-color: rgba(31, 122, 104, 0.42);
+            box-shadow: 0 0 0 5px rgba(31, 122, 104, 0.12);
+            background: #fff;
+        }
+
+        .btn {
+            min-height: 50px;
+            padding: 0 20px;
+            font-size: 15px;
+            border: none;
+            border-radius: 16px;
+            cursor: pointer;
+            transition: transform 0.15s, box-shadow 0.15s, opacity 0.15s, background 0.15s;
+            font-weight: 700;
+            white-space: nowrap;
+            color: #fff;
+            box-shadow: 0 10px 24px rgba(0, 0, 0, 0.08);
+        }
+
+        .btn:active {
+            transform: scale(0.97);
+        }
+
+        .btn:disabled {
+            opacity: 0.45;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #1f7a68, #2c9a83);
+        }
+
+        .btn-stroke {
+            background: linear-gradient(135deg, #c96f4b, #de8b5a);
+        }
+
+        .btn-reset {
+            background: linear-gradient(135deg, #66756c, #7c8b82);
+        }
+
+        .btn-animate {
+            background: linear-gradient(135deg, #287e57, #39a26f);
+        }
+
+        .btn-replay {
+            background: linear-gradient(135deg, #b67a2f, #d09a4b);
+        }
+
+        .practice-card {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            min-height: 100%;
+        }
+
+        .screen {
+            display: none;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .screen.active {
+            display: flex;
+        }
+
+        .voice-toggle {
+            display: inline-flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+            min-height: 56px;
+            padding: 0 16px;
+            border-radius: 18px;
+            background: rgba(255, 255, 255, 0.72);
+            border: 1px solid rgba(114, 90, 53, 0.08);
+            color: #4d584d;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            user-select: none;
+            width: 100%;
+        }
+
+        .voice-toggle input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            accent-color: var(--primary);
+            cursor: pointer;
+        }
+
+        .stage-card {
+            position: relative;
+            overflow: hidden;
+            border-radius: 24px;
+            padding: 14px;
+            background:
+                linear-gradient(180deg, rgba(255, 253, 249, 0.96), rgba(248, 245, 238, 0.88)),
+                var(--surface-strong);
+            border: 1px solid rgba(114, 90, 53, 0.08);
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.85), 0 14px 32px rgba(59, 49, 31, 0.08);
+        }
+
+        .stage-card::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background-image:
+                linear-gradient(rgba(31, 122, 104, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(31, 122, 104, 0.03) 1px, transparent 1px);
+            background-size: 24px 24px;
+            opacity: 0.65;
+            pointer-events: none;
+        }
+
+        .stroke-order-shell,
+        .score-shell,
+        .grids-shell,
+        .quiz-char-tabs {
+            position: relative;
+            z-index: 1;
+        }
+
+        .stage-top {
+            position: relative;
+            z-index: 1;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .stage-title {
+            font-size: 18px;
+            font-weight: 700;
+            letter-spacing: 0.04em;
+        }
+
+        .stage-subtitle {
+            color: var(--text-muted);
+            font-size: 13px;
+            margin-top: 4px;
+        }
+
+        .settings-card {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .settings-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .setting-copy {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .setting-title {
+            font-size: 15px;
+            font-weight: 700;
+            color: var(--text);
+        }
+
+        .setting-desc {
+            font-size: 12px;
+            line-height: 1.5;
+            color: var(--text-muted);
+        }
+
+        .switch {
+            position: relative;
+            width: 48px;
+            height: 30px;
+            flex-shrink: 0;
+        }
+
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .switch-slider {
+            position: absolute;
+            inset: 0;
+            border-radius: 999px;
+            background: rgba(114, 90, 53, 0.18);
+            transition: background 0.2s;
+        }
+
+        .switch-slider::before {
+            content: '';
+            position: absolute;
+            top: 3px;
+            left: 3px;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: #fff;
+            box-shadow: 0 4px 10px rgba(59, 49, 31, 0.16);
+            transition: transform 0.2s;
+        }
+
+        .switch input:checked + .switch-slider {
+            background: var(--primary);
+        }
+
+        .switch input:checked + .switch-slider::before {
+            transform: translateX(18px);
+        }
+
+        .tabbar {
+            position: fixed;
+            left: 50%;
+            bottom: calc(6px + env(safe-area-inset-bottom, 0px));
+            transform: translateX(-50%);
+            width: calc(100% - 24px);
+            max-width: 696px;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 4px;
+            padding: 3px 7px;
+            background: transparent;
+        }
+
+        .tab-btn {
+            min-height: 58px;
+            border: 1px solid rgba(114, 90, 53, 0.08);
+            border-radius: 20px;
+            background: rgba(255, 255, 255, 0.7);
+            color: #667168;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            font: inherit;
+            font-size: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: background 0.2s, color 0.2s, box-shadow 0.2s, transform 0.2s;
+        }
+
+        .tab-btn:active {
+            transform: scale(0.98);
+        }
+
+        .tab-btn.active {
+            background: linear-gradient(135deg, rgba(31, 122, 104, 0.94), rgba(44, 154, 131, 0.9));
+            color: #fff;
+            box-shadow: 0 12px 24px rgba(31, 122, 104, 0.18);
+        }
+
+        .tab-btn-icon {
+            font-size: 18px;
+            line-height: 1;
+        }
+
+        .info {
+            font-size: 16px;
+            color: #3f4d41;
+            min-height: 48px;
+            line-height: 1.6;
+            padding-right: 8px;
+        }
+
+        .sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border: 0;
+        }
+
+        .info .highlight {
+            color: var(--accent);
+            font-weight: 800;
+            font-size: 20px;
+        }
+
+        .info .correct {
+            color: var(--success);
+            font-weight: 700;
+        }
+
+        .info .wrong {
+            color: var(--danger);
+            font-weight: 700;
+        }
+
+        .quiz-char-tabs {
+            display: none;
+            gap: 8px;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin-bottom: 10px;
+        }
+
+        .quiz-char-tabs.visible {
+            display: flex;
+        }
+
+        .quiz-char-tab {
+            width: 42px;
+            height: 42px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            border: 1px solid rgba(114, 90, 53, 0.12);
+            border-radius: 14px;
+            cursor: pointer;
+            background: rgba(255, 255, 255, 0.88);
+            color: var(--text);
+            transition: transform 0.15s, border-color 0.15s, box-shadow 0.15s, background 0.15s;
+            position: relative;
+        }
+
+        .quiz-char-tab:active {
+            transform: scale(0.95);
+        }
+
+        .quiz-char-tab.active {
+            border-color: rgba(31, 122, 104, 0.24);
+            background: linear-gradient(135deg, rgba(31, 122, 104, 0.9), rgba(44, 154, 131, 0.92));
+            color: #fff;
+            box-shadow: 0 12px 24px rgba(31, 122, 104, 0.2);
+        }
+
+        .quiz-char-tab.done {
+            border-color: rgba(47, 143, 91, 0.24);
+        }
+
+        .quiz-char-tab.done::after {
+            content: '✓';
+            position: absolute;
+            top: -4px;
+            right: -4px;
+            width: 16px;
+            height: 16px;
+            border-radius: 999px;
+            background: var(--success);
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            line-height: 1;
+        }
+
+        .quiz-char-tab.active.done::after {
+            background: #fff;
+            color: var(--primary);
+        }
+
+        .grids-shell {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 248px;
+            padding: 2px 0 8px;
+        }
+
+        .grids-row {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            justify-content: center;
+            width: 100%;
         }
 
         .grid-cell {
-            border: 2px solid #c0392b;
-            background: #fff;
             position: relative;
-            cursor: pointer;
-            transition: border-color 0.2s, box-shadow 0.2s;
             flex-shrink: 0;
-            border-radius: 4px;
+            cursor: pointer;
+            border-radius: 0;
+            overflow: hidden;
+            background: linear-gradient(180deg, #fffef9, #f8f1e8);
+            border: 1px solid rgba(201, 111, 75, 0.28);
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8), 0 10px 22px rgba(71, 50, 28, 0.08);
+            transition: transform 0.18s, border-color 0.18s, box-shadow 0.18s;
         }
 
-        /* quiz 模式：只显示活跃格子，其余隐藏 */
+        .grid-cell.active {
+            transform: translateY(-2px);
+            border-color: rgba(31, 122, 104, 0.45);
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.92), 0 18px 34px rgba(31, 122, 104, 0.18);
+        }
+
+        .grid-cell.done::after {
+            content: '✓';
+            position: absolute;
+            top: 2px;
+            right: 2px;
+            width: 11px;
+            height: 11px;
+            border-radius: 999px;
+            background: var(--success);
+            color: #fff;
+            font-size: 7px;
+            font-weight: 700;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 3;
+            pointer-events: none;
+            box-shadow: 0 3px 8px rgba(47, 143, 91, 0.16);
+        }
+
+        .grid-cell.active.done::after {
+            background: var(--primary);
+        }
+
         .grids-row.quiz-mode .grid-cell {
             display: none;
         }
@@ -178,47 +704,19 @@
             display: block;
         }
 
-        .grid-cell.active {
-            border-color: #4a90d9;
-            box-shadow: 0 0 0 3px rgba(74, 144, 217, 0.3);
-        }
-
-        .grid-cell.done::after {
-            content: '✓';
-            position: absolute;
-            top: -5px;
-            right: -5px;
-            width: 16px;
-            height: 16px;
-            background: #28a745;
-            color: #fff;
-            border-radius: 50%;
-            font-size: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 10;
-            pointer-events: none;
-            line-height: 1;
-        }
-
-        .grid-cell.active.done::after {
-            background: #4a90d9;
-        }
-
         .grid-lines {
             position: absolute;
-            top: 0; left: 0;
-            width: 100%; height: 100%;
+            inset: 0;
+            width: 100%;
+            height: 100%;
             z-index: 1;
             pointer-events: none;
         }
 
         .grid-lines line {
-            stroke: #c0392b;
-            stroke-width: 0.5;
-            stroke-dasharray: 4, 3;
-            opacity: 0.5;
+            stroke: rgba(201, 111, 75, 0.66);
+            stroke-width: 0.7;
+            stroke-dasharray: 5 4;
         }
 
         .grid-cell .writer-div {
@@ -228,321 +726,354 @@
             height: 100%;
         }
 
-        /* ========== 笔顺展示栏 ========== */
-        .stroke-order-bar {
+        .stroke-order-shell {
             display: flex;
-            gap: 4px;
-            flex-wrap: wrap;
-            justify-content: center;
-            margin-top: 6px;
-            min-height: 0;
-            padding: 0 12px;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 2px;
+            padding-top: 12px;
+            border-top: 1px solid rgba(114, 90, 53, 0.08);
         }
 
-        .stroke-order-bar:empty {
-            display: none;
+        .shell-title {
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: #7f857f;
+        }
+
+        .stroke-order-bar {
+            display: flex;
+            gap: 10px 14px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .stroke-order-bar:empty::before {
+            content: '加载后显示完整笔顺';
+            color: #97a196;
+            font-size: 13px;
         }
 
         .stroke-order-item {
-            display: inline-flex;
+            display: inline-grid;
+            grid-template-columns: auto auto;
             align-items: center;
-            justify-content: center;
-            padding: 2px 8px;
-            font-size: 13px;
-            border-radius: 4px;
-            background: #f0f0f0;
-            color: #999;
-            transition: all 0.2s;
+            justify-content: start;
+            column-gap: 6px;
+            min-height: 20px;
+            padding: 0;
+            border-radius: 0;
+            background: transparent;
+            color: #768176;
+            transition: color 0.18s, opacity 0.18s;
             line-height: 1.4;
+            font-size: 13px;
+            font-weight: 600;
+            opacity: 0.78;
+        }
+
+        .stroke-order-item::before {
+            content: '';
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: rgba(114, 90, 53, 0.24);
         }
 
         .stroke-order-item.done {
-            background: #e8f5e9;
-            color: #28a745;
-            font-weight: 600;
+            color: var(--success);
+            opacity: 1;
+        }
+
+        .stroke-order-item.done::before {
+            background: rgba(47, 143, 91, 0.64);
         }
 
         .stroke-order-item.current {
-            background: #e3f2fd;
-            color: #4a90d9;
-            font-weight: 600;
-            box-shadow: 0 0 0 2px rgba(74, 144, 217, 0.3);
+            color: var(--primary-strong);
+            opacity: 1;
+            font-weight: 700;
         }
 
-        /* ========== 信息提示 ========== */
-        .info {
-            margin-top: 8px;
-            font-size: 15px;
-            color: #555;
-            min-height: 24px;
-            text-align: center;
-            line-height: 1.5;
-            padding: 0 12px;
+        .stroke-order-item.current::before {
+            background: var(--primary);
         }
 
-        .info .highlight {
-            color: #e8533e;
-            font-weight: bold;
-            font-size: 18px;
+        .quiz-guide {
+            position: absolute;
+            inset: 0;
+            z-index: 2;
+            pointer-events: none;
+            opacity: 0;
         }
 
-        .info .correct { color: #28a745; }
-        .info .wrong { color: #e8533e; }
+        .quiz-guide.flash {
+            animation: quizGuideFade 0.9s ease;
+        }
 
-        /* ========== 操作按钮行 ========== */
+        @keyframes quizGuideFade {
+            0% {
+                opacity: 0;
+            }
+            20% {
+                opacity: 1;
+            }
+            100% {
+                opacity: 0;
+            }
+        }
+
         .button-row {
-            display: flex;
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
             gap: 10px;
-            margin-top: 14px;
-            justify-content: center;
-            flex-wrap: wrap;
             width: 100%;
-            max-width: 400px;
         }
 
         .button-row .btn {
-            flex: 1;
-            min-width: 0;
-            max-width: 140px;
-        }
-
-        /* ========== 成绩统计 ========== */
-        .score-bar {
-            display: flex;
-            gap: 20px;
-            margin-top: 6px;
-            font-size: 13px;
-            color: #888;
-        }
-
-        .score-bar span { font-weight: 600; }
-        .score-bar .correct-count { color: #28a745; }
-        .score-bar .mistake-count { color: #e8533e; }
-
-        /* ========== Quiz 切字标签栏 ========== */
-        .quiz-char-tabs {
-            display: none;
-            gap: 8px;
-            flex-wrap: wrap;
-            justify-content: center;
-            margin-bottom: 10px;
             width: 100%;
         }
 
-        .quiz-char-tabs.visible {
-            display: flex;
+        #quizButtons .btn {
+            grid-column: 1 / -1;
         }
 
-        .quiz-char-tab {
-            width: 36px;
-            height: 36px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 18px;
-            border: 2px solid #d0d7de;
-            border-radius: 8px;
-            cursor: pointer;
-            background: #fff;
-            color: #333;
-            transition: all 0.15s;
-            position: relative;
-            -webkit-tap-highlight-color: transparent;
-        }
-
-        .quiz-char-tab:active {
-            transform: scale(0.93);
-        }
-
-        .quiz-char-tab.active {
-            border-color: #4a90d9;
-            background: #4a90d9;
-            color: #fff;
-            box-shadow: 0 1px 4px rgba(74, 144, 217, 0.3);
-        }
-
-        .quiz-char-tab.done {
-            border-color: #28a745;
-        }
-
-        .quiz-char-tab.done::after {
-            content: '✓';
-            position: absolute;
-            top: -4px;
-            right: -4px;
-            width: 14px;
-            height: 14px;
-            background: #28a745;
-            color: #fff;
-            border-radius: 50%;
-            font-size: 9px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            line-height: 1;
-        }
-
-        .quiz-char-tab.active.done::after {
-            background: #fff;
-            color: #4a90d9;
-        }
-
-        /* ========== 语音开关 ========== */
-        .voice-toggle {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 6px;
-            margin-bottom: 14px;
-            font-size: 14px;
-            color: #555;
-            cursor: pointer;
-            -webkit-tap-highlight-color: transparent;
-            user-select: none;
-        }
-
-        .voice-toggle input[type="checkbox"] {
-            width: 18px;
-            height: 18px;
-            accent-color: #4a90d9;
-            cursor: pointer;
-        }
-
-        /* ========== 响应式 ========== */
-
-        /* 大屏 / 桌面 */
-        @media (min-width: 600px) {
+        @media (min-width: 640px) {
             .app {
-                padding-top: 48px;
+                padding-left: 18px;
+                padding-right: 18px;
             }
 
-            h1 {
-                font-size: 26px;
-                margin-bottom: 28px;
+            .hero-card {
+                padding: 20px 20px 18px;
+            }
+
+            .hero-copy h1 {
+                font-size: 30px;
             }
 
             .controls input {
-                height: 48px;
-                font-size: 22px;
+                height: 58px;
+                font-size: 24px;
             }
 
             .btn {
-                height: 48px;
-                font-size: 16px;
-                padding: 0 24px;
-            }
-
-            .mode-tabs {
-                max-width: 320px;
-            }
-
-            .mode-tab {
-                padding: 10px 0;
-                font-size: 15px;
-            }
-        }
-
-        /* 极小屏 (<= 360px) */
-        @media (max-width: 360px) {
-            .app {
-                padding: 16px 10px 24px;
-            }
-
-            h1 {
-                font-size: 19px;
-                margin-bottom: 14px;
-            }
-
-            .controls input {
-                height: 40px;
-                font-size: 17px;
-                letter-spacing: 2px;
-            }
-
-            .btn {
-                height: 40px;
-                padding: 0 14px;
-                font-size: 13px;
-            }
-
-            .mode-tab {
-                font-size: 12px;
-                padding: 8px 0;
-            }
-
-            .grids-row {
-                gap: 6px;
-            }
-
-            .quiz-char-tabs {
-                gap: 6px;
-            }
-
-            .quiz-char-tab {
-                width: 32px;
-                height: 32px;
-                font-size: 16px;
-                border-radius: 6px;
-            }
-
-            .info {
-                font-size: 13px;
-            }
-
-            .info .highlight {
+                min-height: 54px;
                 font-size: 16px;
             }
 
             .button-row {
-                gap: 6px;
+                grid-template-columns: repeat(4, minmax(0, 1fr));
+            }
+
+            .tabbar {
+                padding-left: 16px;
+                padding-right: 16px;
+            }
+        }
+
+        @media (max-width: 420px) {
+            .app {
+                padding-left: 10px;
+                padding-right: 10px;
+            }
+
+            .hero-card,
+            .input-card,
+            .practice-card,
+            .stage-card {
+                border-radius: 20px;
+            }
+
+            .hero-copy h1 {
+                font-size: 26px;
+            }
+
+            .hero-top,
+            .input-top,
+            .section-head,
+            .stage-top {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .voice-toggle {
+                align-self: flex-start;
+            }
+
+            .input-body {
+                padding: 12px;
+            }
+
+            .controls {
+                grid-template-columns: 1fr;
+            }
+
+            .controls input {
+                height: 50px;
+                font-size: 20px;
+                text-align: center;
+            }
+
+            .grids-shell {
+                min-height: 220px;
+            }
+
+            .grid-cell {
+                border-radius: 0;
+            }
+
+            .quiz-char-tab {
+                width: 38px;
+                height: 38px;
+            }
+
+            .button-row {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .hero-meta {
+                gap: 8px;
+            }
+
+            .meta-pill {
+                min-height: 30px;
+                padding: 0 10px;
+                font-size: 11px;
+            }
+
+            .tabbar {
+                gap: 4px;
+                width: calc(100% - 16px);
+                padding-top: 3px;
+                padding-bottom: 3px;
+                padding-left: 6px;
+                padding-right: 6px;
+            }
+
+            .tab-btn {
+                min-height: 54px;
             }
         }
     </style>
 </head>
 <body>
-    <div class="app">
-        <h1>汉字笔画练习</h1>
+    <div class="app" data-mode="demo" data-tab="demo">
+        <div class="app-shell">
+            <section class="input-card" id="inputCard">
+                <div class="input-top">
+                    <div class="input-title-group">
+                        <div class="section-title">练习内容</div>
+                        <div class="section-subtitle">输入最多 6 个汉字，加载后即可在演示或练习中切换使用。</div>
+                    </div>
+                </div>
 
-        <div class="controls">
-            <input type="text" id="charInput" maxlength="10" placeholder="输入汉字，最多10个" />
-            <button class="btn btn-primary" id="loadBtn" onclick="loadCharacter()">加载</button>
+                <div class="input-body">
+                    <div class="controls">
+                        <input type="text" id="charInput" maxlength="6" placeholder="输入汉字，最多6个" />
+                        <button class="btn btn-primary" id="loadBtn" onclick="loadCharacter()">加载内容</button>
+                    </div>
+                </div>
+            </section>
+
+            <section class="practice-card" id="practiceCard">
+                <div class="screen active" id="screenDemo">
+                    <div class="stage-top">
+                        <div>
+                            <div class="stage-title">演示模式</div>
+                            <div class="stage-subtitle">逐笔查看当前汉字的书写顺序。</div>
+                        </div>
+                    </div>
+
+                    <div class="stage-card">
+                        <div class="info sr-only" id="strokeInfo" aria-live="polite">请输入汉字并点击「加载内容」</div>
+
+                        <div class="grids-shell">
+                            <div class="grids-row" id="demoGridsRow"></div>
+                        </div>
+
+                        <div class="stroke-order-shell">
+                            <div class="shell-title">笔顺提示</div>
+                            <div class="stroke-order-bar" id="strokeOrderBar"></div>
+                        </div>
+                    </div>
+
+                    <div class="button-row" id="demoButtons">
+                        <button class="btn btn-stroke" id="nextStrokeBtn" onclick="showNextStroke()" disabled>下一笔</button>
+                        <button class="btn btn-replay" id="replayBtn" onclick="replayStroke()" disabled>重复当前笔</button>
+                        <button class="btn btn-reset" id="resetBtn" onclick="resetStrokes()" disabled>重置演示</button>
+                        <button class="btn btn-animate" id="animateBtn" onclick="animateAll()" disabled>自动书写</button>
+                    </div>
+                </div>
+
+                <div class="screen" id="screenQuiz">
+                    <div class="stage-top">
+                        <div>
+                            <div class="stage-title">练习模式</div>
+                            <div class="stage-subtitle">手写临摹并实时判断笔顺是否正确。</div>
+                        </div>
+                    </div>
+
+                    <div class="stage-card">
+                        <div class="quiz-char-tabs" id="quizCharTabs"></div>
+
+                        <div class="grids-shell">
+                            <div class="grids-row quiz-mode" id="quizGridsRow"></div>
+                        </div>
+
+                        <div class="stroke-order-shell">
+                            <div class="shell-title">笔顺提示</div>
+                            <div class="stroke-order-bar" id="quizStrokeOrderBar"></div>
+                        </div>
+                    </div>
+
+                    <div class="button-row" id="quizButtons">
+                        <button class="btn btn-reset" id="quizResetBtn" onclick="startQuiz()" disabled>重新开始练习</button>
+                    </div>
+                </div>
+
+                <div class="screen" id="screenSettings">
+                    <div class="stage-top">
+                        <div>
+                            <div class="stage-title">设置</div>
+                            <div class="stage-subtitle">保存偏好设置，下次打开继续沿用，设置会自动保存。</div>
+                        </div>
+                    </div>
+
+                    <div class="stage-card settings-card">
+                        <div class="settings-list">
+                            <label class="voice-toggle" for="voiceToggle">
+                                <div class="setting-copy">
+                                    <span class="setting-title">笔画语音</span>
+                                    <span class="setting-desc">演示和练习时播报当前笔画名称。</span>
+                                </div>
+                                <span class="switch">
+                                    <input type="checkbox" id="voiceToggle" checked />
+                                    <span class="switch-slider"></span>
+                                </span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </section>
         </div>
 
-        <!-- 模式切换 -->
-        <div class="mode-tabs">
-            <button class="mode-tab active" id="tabDemo" onclick="switchMode('demo')">📖 演示</button>
-            <button class="mode-tab" id="tabQuiz" onclick="switchMode('quiz')">✍️ 自己写</button>
-        </div>
-
-        <!-- 语音开关 -->
-        <label class="voice-toggle" id="voiceToggleWrap" style="display:none;">
-            <input type="checkbox" id="voiceToggle" checked />
-            <span>🔊 笔画语音</span>
-        </label>
-
-        <!-- 小田字格横排 -->
-        <div class="grids-row" id="gridsRow"></div>
-
-        <!-- Quiz 模式切字标签 -->
-        <div class="quiz-char-tabs" id="quizCharTabs"></div>
-
-        <div class="stroke-order-bar" id="strokeOrderBar"></div>
-        <div class="info" id="strokeInfo">请输入汉字并点击「加载」</div>
-        <div class="score-bar" id="scoreBar" style="display:none;">
-            <div>✅ 正确：<span class="correct-count" id="correctCount">0</span></div>
-            <div>❌ 错误：<span class="mistake-count" id="mistakeCount">0</span></div>
-        </div>
-
-        <div class="button-row" id="demoButtons">
-            <button class="btn btn-stroke" id="nextStrokeBtn" onclick="showNextStroke()" disabled>下一笔</button>
-            <button class="btn btn-replay" id="replayBtn" onclick="replayStroke()" disabled>重复</button>
-            <button class="btn btn-reset" id="resetBtn" onclick="resetStrokes()" disabled>重置</button>
-            <button class="btn btn-animate" id="animateBtn" onclick="animateAll()" disabled>自动写</button>
-        </div>
-
-        <div class="button-row" id="quizButtons" style="display:none;">
-            <button class="btn btn-reset" id="quizResetBtn" onclick="startQuiz()" disabled>重新开始</button>
-        </div>
+        <nav class="tabbar" aria-label="底部导航">
+            <button class="tab-btn active" id="tabDemo" onclick="switchMode('demo')">
+                <span class="tab-btn-icon">演</span>
+                <span>演示</span>
+            </button>
+            <button class="tab-btn" id="tabQuiz" onclick="switchMode('quiz')">
+                <span class="tab-btn-icon">练</span>
+                <span>练习</span>
+            </button>
+            <button class="tab-btn" id="tabSettings" onclick="switchMode('settings')">
+                <span class="tab-btn-icon">设</span>
+                <span>设置</span>
+            </button>
+        </nav>
     </div>
 
     <script>
@@ -565,21 +1096,267 @@
 
         let charStrokeNames = [];    // 每个字的笔画名称数组（来自 cnchar）
         let voiceEnabled = true;     // 语音开关
+        let strokeOrderFocus = -1;
+        var voiceStorageKey = 'hanzi-stroke:voice-enabled';
+        var quizHintTimer = null;
+        var quizGuideWriter = null;
+        var quizGuideChar = '';
+        var quizGuideDelay = 360;
+        var quizGuideDuration = 1400;
+        var quizFirstGuideDelay = 420;
+        var demoAutoDelay = 320;
+
+        function loadSettings() {
+            try {
+                var storedVoiceEnabled = localStorage.getItem(voiceStorageKey);
+                if (storedVoiceEnabled !== null) {
+                    voiceEnabled = storedVoiceEnabled === 'true';
+                }
+            } catch (e) {}
+            document.getElementById('voiceToggle').checked = voiceEnabled;
+        }
+
+        function persistVoiceSetting() {
+            try {
+                localStorage.setItem(voiceStorageKey, String(voiceEnabled));
+            } catch (e) {}
+        }
+
+        function ensureQuizGuideLayer(size) {
+            var activeCell = document.querySelector('#quizGridsRow .grid-cell.active');
+            if (!activeCell) return null;
+
+            var oldGuides = document.querySelectorAll('#quizGridsRow .quiz-guide');
+            for (var i = 0; i < oldGuides.length; i++) {
+                if (oldGuides[i].parentNode !== activeCell) {
+                    oldGuides[i].remove();
+                }
+            }
+
+            var existingGuide = activeCell.querySelector('.quiz-guide');
+            if (!existingGuide) {
+                existingGuide = document.createElement('div');
+                existingGuide.className = 'quiz-guide';
+                existingGuide.id = 'quizGuide';
+                activeCell.appendChild(existingGuide);
+            }
+
+            if (quizGuideChar !== currentChar) {
+                quizGuideWriter = null;
+            }
+
+            if (!quizGuideWriter) {
+                quizGuideWriter = HanziWriter.create('quizGuide', currentChar, {
+                    width: size,
+                    height: size,
+                    padding: Math.max(4, Math.round(size * 0.06)),
+                    showCharacter: false,
+                    showOutline: false,
+                    outlineColor: 'rgba(0, 0, 0, 0)',
+                    strokeColor: 'rgba(31, 122, 104, 0.72)',
+                    drawingColor: 'rgba(31, 122, 104, 0.72)',
+                    radicalColor: 'rgba(31, 122, 104, 0.72)',
+                    highlightColor: 'rgba(31, 122, 104, 0.72)',
+                    delayBetweenStrokes: 0,
+                    strokeAnimationSpeed: 0.55,
+                    charDataLoader: function (c, onLoad) {
+                        loadLocalCharData(c).then(onLoad).catch(function() {});
+                    }
+                });
+                quizGuideChar = currentChar;
+            }
+
+            return existingGuide;
+        }
+
+        function showQuizHint(strokeIndex, delay) {
+            if (strokeIndex >= totalStrokes) return;
+            var activeCell = document.querySelector('#quizGridsRow .grid-cell.active');
+            if (!activeCell) return;
+            var size = activeCell.clientWidth;
+            var guide = ensureQuizGuideLayer(size);
+            if (!guide || !quizGuideWriter) return;
+            var wait = typeof delay === 'number' ? delay : 0;
+            var strokeName = '';
+            if (charStrokeNames[charIndex] && charStrokeNames[charIndex][strokeIndex]) {
+                strokeName = charStrokeNames[charIndex][strokeIndex];
+            }
+
+            if (quizHintTimer) {
+                clearTimeout(quizHintTimer);
+                quizHintTimer = null;
+            }
+            quizGuideWriter.hideCharacter();
+            guide.classList.remove('flash');
+            setStrokeOrderFocus(-1);
+            quizHintTimer = setTimeout(function() {
+                quizHintTimer = null;
+                void guide.offsetWidth;
+                guide.classList.add('flash');
+                setStrokeOrderFocus(strokeIndex);
+                var voiceDone = !voiceEnabled || !strokeName;
+                var animDone = false;
+
+                function finishGuide() {
+                    if (!voiceDone || !animDone) return;
+                    setStrokeOrderFocus(-1);
+                    if (quizGuideWriter) {
+                        quizGuideWriter.hideCharacter();
+                    }
+                }
+
+                if (!voiceDone) {
+                    speakStrokeName(strokeName, function () {
+                        voiceDone = true;
+                        finishGuide();
+                    });
+                }
+
+                quizGuideWriter.animateStroke(strokeIndex, {
+                    onComplete: function () {
+                        animDone = true;
+                        finishGuide();
+                    }
+                });
+                quizHintTimer = setTimeout(function() {
+                    guide.classList.remove('flash');
+                    setStrokeOrderFocus(-1);
+                    if (quizGuideWriter) {
+                        quizGuideWriter.hideCharacter();
+                    }
+                    quizHintTimer = null;
+                }, quizGuideDuration);
+            }, wait);
+        }
+
+        function updateModeUI() {
+            document.querySelector('.app').setAttribute('data-mode', currentMode);
+            document.querySelector('.app').setAttribute('data-tab', currentMode);
+            document.getElementById('inputCard').style.display = currentMode === 'settings' ? 'none' : 'block';
+            document.getElementById('tabDemo').classList.toggle('active', currentMode === 'demo');
+            document.getElementById('tabQuiz').classList.toggle('active', currentMode === 'quiz');
+            document.getElementById('tabSettings').classList.toggle('active', currentMode === 'settings');
+            document.getElementById('screenDemo').classList.toggle('active', currentMode === 'demo');
+            document.getElementById('screenQuiz').classList.toggle('active', currentMode === 'quiz');
+            document.getElementById('screenSettings').classList.toggle('active', currentMode === 'settings');
+            document.getElementById('demoButtons').style.display = currentMode === 'demo' ? 'grid' : 'none';
+            document.getElementById('quizButtons').style.display = currentMode === 'quiz' ? 'grid' : 'none';
+        }
+
+        function setStrokeOrderFocus(index) {
+            strokeOrderFocus = index;
+            updateStrokeOrderBar();
+        }
+
+        function scrollToActiveScreen(options) {
+            var target = document.getElementById('practiceCard');
+            var shell = document.querySelector('.app-shell');
+            if (!target) return;
+            if (!shell) return;
+
+            var useSmooth = !options || options.smooth !== false;
+            var needCorrections = !options || options.correct !== false;
+
+            function scrollOnce(behavior) {
+                var shellRect = shell.getBoundingClientRect();
+                var targetRect = target.getBoundingClientRect();
+                // 让模式卡片贴齐可视区顶部，保证上方练习内容卡片完全滑出视口。
+                var nextTop = shell.scrollTop + (targetRect.top - shellRect.top);
+                shell.scrollTo({
+                    top: Math.max(0, nextTop),
+                    behavior: behavior
+                });
+            }
+
+            requestAnimationFrame(function() {
+                scrollOnce(useSmooth ? 'smooth' : 'auto');
+
+                // 移动端收起键盘后视口高度通常会再变化 1 到 2 次，
+                // 追加几次校正，避免输入卡片残留在顶部。
+                if (needCorrections) {
+                    setTimeout(function() {
+                        scrollOnce('auto');
+                    }, 180);
+                    setTimeout(function() {
+                        scrollOnce('auto');
+                    }, 360);
+                }
+            });
+        }
+
+        function scrollShellToTop() {
+            var shell = document.querySelector('.app-shell');
+            if (!shell) return;
+
+            shell.scrollTo({
+                top: 0,
+                behavior: 'smooth'
+            });
+        }
+
+        function clearQuizGuide() {
+            if (quizHintTimer) {
+                clearTimeout(quizHintTimer);
+                quizHintTimer = null;
+            }
+            setStrokeOrderFocus(-1);
+            var guide = document.querySelector('#quizGridsRow .quiz-guide');
+            if (guide) {
+                guide.classList.remove('flash');
+            }
+            if (quizGuideWriter) {
+                quizGuideWriter.hideCharacter();
+            }
+        }
+
+        function resetCurrentCharState() {
+            cancelAdvance();
+            isAnimating = false;
+            currentStroke = 0;
+            strokeOrderFocus = -1;
+            quizMistakes = 0;
+            quizCorrect = 0;
+            clearQuizGuide();
+
+            if (writer) {
+                writer.cancelQuiz();
+                writer.hideCharacter();
+                writer.showOutline();
+            }
+
+            updateActiveUI();
+            renderStrokeOrderBar();
+        }
+
+        function rebuildCurrentMode() {
+            if (!charArray.length || currentMode === 'settings') return;
+
+            loadedCount = 0;
+            createAllGrids();
+        }
 
         // ========== 模式切换 ==========
         function switchMode(mode) {
-            currentMode = mode;
-            document.getElementById('tabDemo').classList.toggle('active', mode === 'demo');
-            document.getElementById('tabQuiz').classList.toggle('active', mode === 'quiz');
-            document.getElementById('demoButtons').style.display = mode === 'demo' ? 'flex' : 'none';
-            document.getElementById('quizButtons').style.display = mode === 'quiz' ? 'flex' : 'none';
-            document.getElementById('scoreBar').style.display = mode === 'quiz' ? 'flex' : 'none';
-            document.getElementById('gridsRow').classList.toggle('quiz-mode', mode === 'quiz');
+            var previousMode = currentMode;
+            if (mode === previousMode) return;
 
+            if (charArray.length > 0 && previousMode !== 'settings') {
+                charDone = {};
+                resetCurrentCharState();
+            }
+
+            currentMode = mode;
+            updateModeUI();
             updateQuizTabs();
 
+            if (charArray.length > 0 && mode !== 'settings') {
+                rebuildCurrentMode();
+            }
+
             if (charArray.length > 0) {
-                reloadAll();
+                scrollToActiveScreen({ smooth: false, correct: false });
+            } else {
+                scrollShellToTop();
             }
         }
 
@@ -591,7 +1368,7 @@
             var chars = input.match(/[\u4e00-\u9fff]/g);
             if (!chars || chars.length === 0) { alert('请输入有效的汉字！'); return; }
 
-            charArray = chars.slice(0, 10);
+            charArray = chars.slice(0, 6);
             charIndex = 0;
             charDone = {};
             loadedCount = 0;
@@ -600,43 +1377,50 @@
             document.getElementById('charInput').blur();
 
             createAllGrids();
+            scrollToActiveScreen({ smooth: true, correct: true });
         }
 
         // ========== 自适应格子尺寸 ==========
         function calcCellSize(count) {
             var vw = window.innerWidth;
-            var appPad = vw <= 360 ? 20 : 32;
-            var available = Math.min(vw, 600) - appPad;
+            var shell = currentMode === 'quiz'
+                ? document.querySelector('#screenQuiz .grids-shell')
+                : document.querySelector('#screenDemo .grids-shell');
+            var available = shell ? shell.clientWidth - 8 : Math.min(vw, 720) - (vw <= 360 ? 20 : 32);
             var gap = vw <= 360 ? 6 : 10;
 
             if (count === 1) {
-                var s = Math.min(220, available * 0.6);
+                var s = Math.min(240, available * 0.72);
                 return { size: Math.round(s), padding: Math.round(s * 0.07) };
             }
 
             // quiz 模式：只显示一个大格子，尺寸接近单字
             if (currentMode === 'quiz') {
-                var qs = Math.min(240, available * 0.65);
+                var qs = Math.min(280, available * 0.82);
                 return { size: Math.round(qs), padding: Math.round(qs * 0.06) };
             }
 
-            // 演示模式：多字一排
-            var perRow = count;
+            // 演示模式：一行最多 3 个
+            var perRow = Math.min(count, 3);
             var idealSize = Math.floor((available - gap * (perRow - 1)) / perRow);
 
             if (idealSize < 70) {
                 perRow = Math.max(2, Math.floor((available + gap) / (70 + gap)));
+                perRow = Math.min(perRow, 3);
                 idealSize = Math.floor((available - gap * (perRow - 1)) / perRow);
             }
 
-            var cellSize = Math.max(60, Math.min(120, idealSize));
+            var cellSize = Math.max(72, Math.min(136, idealSize));
             return { size: cellSize, padding: Math.max(4, Math.round(cellSize * 0.05)) };
         }
 
         // ========== 创建所有格子 ==========
         function createAllGrids() {
-            var row = document.getElementById('gridsRow');
-            row.innerHTML = '';
+            var demoRow = document.getElementById('demoGridsRow');
+            var quizRow = document.getElementById('quizGridsRow');
+            demoRow.innerHTML = '';
+            quizRow.innerHTML = '';
+            quizGuideWriter = null;
             writers = [];
             writerStrokes = [];
 
@@ -670,7 +1454,11 @@
                 writerDiv.id = 'writer-' + i;
                 cell.appendChild(writerDiv);
 
-                row.appendChild(cell);
+                if (currentMode === 'quiz') {
+                    quizRow.appendChild(cell);
+                } else {
+                    demoRow.appendChild(cell);
+                }
                 createWriter(i, charArray[i], cellSize, cellPadding);
             }
 
@@ -678,7 +1466,14 @@
             currentChar = charArray[0];
             updateActiveUI();
             renderQuizTabs();
-            document.getElementById('gridsRow').classList.toggle('quiz-mode', currentMode === 'quiz');
+            updateModeUI();
+        }
+
+        function loadLocalCharData(char) {
+            return fetch('./hanzi-data/' + encodeURIComponent(char) + '.json').then(function(res) {
+                if (!res.ok) throw new Error('找不到该汉字数据');
+                return res.json();
+            });
         }
 
         function createWriter(index, char, size, padding) {
@@ -688,23 +1483,20 @@
                 padding: padding,
                 showCharacter: false,
                 showOutline: true,
-                strokeColor: '#333',
-                outlineColor: '#ddd',
-                drawingColor: '#4a90d9',
+                strokeColor: '#2a332d',
+                outlineColor: '#ddd4c7',
+                drawingColor: '#1f7a68',
                 drawingWidth: size > 150 ? 6 : (size > 90 ? 4 : 3),
                 strokeAnimationSpeed: 1,
                 delayBetweenStrokes: 0,
-                highlightColor: '#aad4ff',
+                highlightColor: '#9fd9cb',
                 showHintAfterMisses: 3,
                 highlightOnComplete: true,
-                radicalColor: '#333',
+                radicalColor: '#2a332d',
                 charDataLoader: function (c, onLoad) {
-                    fetch('https://cdn.jsdelivr.net/npm/hanzi-writer-data@2.0/' + c + '.json')
+                    loadLocalCharData(c)
                         .then(function(res) {
-                            if (!res.ok) throw new Error('找不到该汉字数据');
-                            return res.json();
-                        })
-                        .then(function(data) {
+                            var data = res;
                             writerStrokes[index] = data.strokes.length;
                             // 使用 cnchar 获取笔画名称
                             try {
@@ -731,15 +1523,22 @@
             writer = writers[charIndex];
             totalStrokes = writerStrokes[charIndex] || 0;
             currentStroke = 0;
+            strokeOrderFocus = -1;
             quizMistakes = 0;
             quizCorrect = 0;
-            updateScoreBar();
-            document.getElementById('voiceToggleWrap').style.display = 'flex';
             renderStrokeOrderBar();
+            updateModeUI();
+
+            if (!totalStrokes) {
+                document.getElementById('strokeInfo').innerHTML = '「' + currentChar + '」暂无可用笔画数据';
+                disableDemoButtons();
+                document.getElementById('quizResetBtn').disabled = true;
+                return;
+            }
 
             if (currentMode === 'quiz') {
                 enableQuizButtons();
-                startQuiz();
+                startQuiz({ keepDoneState: !!charDone[charIndex] });
             } else {
                 updateInfo();
                 enableDemoButtons();
@@ -772,19 +1571,30 @@
             currentChar = charArray[idx];
             writer = writers[idx];
             totalStrokes = writerStrokes[idx] || 0;
-            currentStroke = 0;
+            var keepQuizResult = currentMode === 'quiz' && !!charDone[idx];
+            currentStroke = keepQuizResult ? totalStrokes : 0;
+            strokeOrderFocus = -1;
             quizMistakes = 0;
             quizCorrect = 0;
-            updateScoreBar();
+            if (currentMode === 'demo') {
+                delete charDone[idx];
+            }
             updateActiveUI();
             renderStrokeOrderBar();
-            if (writer) {
+            if (writer && !keepQuizResult) {
                 writer.hideCharacter();
                 writer.showOutline();
             }
 
             if (currentMode === 'quiz') {
-                startQuiz();
+                if (keepQuizResult) {
+                    document.getElementById('strokeInfo').innerHTML =
+                        '「' + currentChar + '」已完成！共 <span class="highlight">' + totalStrokes + '</span> 笔 ✅';
+                    updateStrokeOrderBar();
+                    enableQuizButtons();
+                } else {
+                    startQuiz({ keepDoneState: false });
+                }
             } else {
                 updateInfo();
                 enableDemoButtons();
@@ -805,21 +1615,38 @@
             if (!writer || currentStroke >= totalStrokes) return;
             cancelAdvance();
             disableDemoButtons();
+            setStrokeOrderFocus(currentStroke);
+            var voiceDone = false;
+            var strokeDone = false;
+
+            function finishStrokePlayback() {
+                if (!voiceDone || !strokeDone) return;
+                setStrokeOrderFocus(-1);
+                enableDemoButtons();
+                document.getElementById('replayBtn').disabled = (currentStroke <= 0);
+                if (currentStroke >= totalStrokes) {
+                    markCurrentDone();
+                    document.getElementById('nextStrokeBtn').disabled = true;
+                    document.getElementById('strokeInfo').innerHTML =
+                        '「' + currentChar + '」完成！共 <span class="highlight">' + totalStrokes + '</span> 笔 ✅';
+                }
+            }
+
             // 语音播报当前笔画（笔画开始时）
             if (voiceEnabled && charStrokeNames[charIndex] && charStrokeNames[charIndex][currentStroke]) {
-                speakStrokeName(charStrokeNames[charIndex][currentStroke]);
+                speakStrokeName(charStrokeNames[charIndex][currentStroke], function () {
+                    voiceDone = true;
+                    finishStrokePlayback();
+                });
+            } else {
+                voiceDone = true;
             }
             writer.animateStroke(currentStroke, {
                 onComplete: function () {
                     currentStroke++;
                     updateInfo();
-                    enableDemoButtons();
-                    document.getElementById('replayBtn').disabled = (currentStroke <= 0);
-                    if (currentStroke >= totalStrokes) {
-                        document.getElementById('nextStrokeBtn').disabled = true;
-                        document.getElementById('strokeInfo').innerHTML =
-                            '「' + currentChar + '」完成！共 <span class="highlight">' + totalStrokes + '</span> 笔 ✅';
-                    }
+                    strokeDone = true;
+                    finishStrokePlayback();
                 }
             });
         }
@@ -827,16 +1654,32 @@
         function replayStroke() {
             if (!writer || currentStroke <= 0) return;
             disableDemoButtons();
+            setStrokeOrderFocus(currentStroke - 1);
+            var voiceDone = false;
+            var strokeDone = false;
+
+            function finishReplayPlayback() {
+                if (!voiceDone || !strokeDone) return;
+                setStrokeOrderFocus(-1);
+                enableDemoButtons();
+                if (currentStroke >= totalStrokes) {
+                    document.getElementById('nextStrokeBtn').disabled = true;
+                }
+            }
+
             // 语音播报重复的笔画（笔画开始时）
             if (voiceEnabled && charStrokeNames[charIndex] && charStrokeNames[charIndex][currentStroke - 1]) {
-                speakStrokeName(charStrokeNames[charIndex][currentStroke - 1]);
+                speakStrokeName(charStrokeNames[charIndex][currentStroke - 1], function () {
+                    voiceDone = true;
+                    finishReplayPlayback();
+                });
+            } else {
+                voiceDone = true;
             }
             writer.animateStroke(currentStroke - 1, {
                 onComplete: function () {
-                    enableDemoButtons();
-                    if (currentStroke >= totalStrokes) {
-                        document.getElementById('nextStrokeBtn').disabled = true;
-                    }
+                    strokeDone = true;
+                    finishReplayPlayback();
                 }
             });
         }
@@ -846,6 +1689,7 @@
             cancelAdvance();
             isAnimating = false;
             currentStroke = 0;
+            strokeOrderFocus = -1;
             delete charDone[charIndex];
             writer.hideCharacter();
             writer.showOutline();
@@ -861,6 +1705,7 @@
             cancelAdvance();
             isAnimating = true;
             currentStroke = 0;
+            strokeOrderFocus = -1;
             writer.hideCharacter();
             writer.showOutline();
             updateInfo();
@@ -881,6 +1726,7 @@
 
                 if (n >= lockedTotal) {
                     isAnimating = false;
+                    markCurrentDone();
                     document.getElementById('strokeInfo').innerHTML =
                         '「' + lockedChar + '」完成！共 <span class="highlight">' + lockedTotal + '</span> 笔 ✅';
                     document.getElementById('animateBtn').disabled = false;
@@ -895,7 +1741,15 @@
                 var voiceDone = false, animDone = false;
                 function tryNext() {
                     if (voiceDone && animDone && isAnimating && charIndex === lockedIndex) {
-                        animateNext(n + 1);
+                        if (voiceEnabled) {
+                            animateNext(n + 1);
+                        } else {
+                            setTimeout(function() {
+                                if (isAnimating && charIndex === lockedIndex) {
+                                    animateNext(n + 1);
+                                }
+                            }, demoAutoDelay);
+                        }
                     }
                 }
                 if (voiceEnabled && charStrokeNames[lockedIndex] && charStrokeNames[lockedIndex][n]) {
@@ -906,6 +1760,7 @@
                 } else {
                     voiceDone = true;
                 }
+                setStrokeOrderFocus(n);
                 lockedWriter.animateStroke(n, {
                     onComplete: function () {
                         if (!isAnimating || charIndex !== lockedIndex) return;
@@ -921,7 +1776,7 @@
 
         function updateInfo() {
             document.getElementById('strokeInfo').innerHTML =
-                '「' + currentChar + '」<span class="highlight">' + currentStroke + '</span> / ' + totalStrokes + ' 笔';
+                '当前字「' + currentChar + '」<span class="highlight">' + currentStroke + '</span> / ' + totalStrokes + ' 笔';
             updateStrokeOrderBar();
         }
 
@@ -940,25 +1795,40 @@
         }
 
         // ========== 笔顺展示栏 ==========
+        function getStrokeOrderBars() {
+            return [
+                document.getElementById('strokeOrderBar'),
+                document.getElementById('quizStrokeOrderBar')
+            ].filter(Boolean);
+        }
+
         function renderStrokeOrderBar() {
-            var bar = document.getElementById('strokeOrderBar');
-            bar.innerHTML = '';
+            var bars = getStrokeOrderBars();
             var names = charStrokeNames[charIndex];
+            for (var b = 0; b < bars.length; b++) {
+                bars[b].innerHTML = '';
+            }
             if (!names || names.length === 0) return;
             for (var i = 0; i < names.length; i++) {
-                var span = document.createElement('span');
-                span.className = 'stroke-order-item';
-                span.textContent = (i + 1) + '.' + getStrokeDisplayName(names[i]);
-                bar.appendChild(span);
+                for (var j = 0; j < bars.length; j++) {
+                    var span = document.createElement('span');
+                    span.className = 'stroke-order-item';
+                    span.textContent = (i + 1) + '.' + getStrokeDisplayName(names[i]);
+                    bars[j].appendChild(span);
+                }
             }
             updateStrokeOrderBar();
         }
 
         function updateStrokeOrderBar() {
-            var items = document.querySelectorAll('.stroke-order-item');
-            for (var i = 0; i < items.length; i++) {
-                items[i].classList.toggle('done', i < currentStroke);
-                items[i].classList.toggle('current', i === currentStroke);
+            var bars = getStrokeOrderBars();
+            for (var b = 0; b < bars.length; b++) {
+                var items = bars[b].querySelectorAll('.stroke-order-item');
+                for (var i = 0; i < items.length; i++) {
+                    var isFocused = i === strokeOrderFocus && strokeOrderFocus >= 0 && strokeOrderFocus < totalStrokes;
+                    items[i].classList.toggle('done', i < currentStroke && !isFocused);
+                    items[i].classList.toggle('current', isFocused);
+                }
             }
         }
 
@@ -1028,14 +1898,22 @@
         }
 
         // ========== Quiz ==========
-        function startQuiz() {
+        function startQuiz(options) {
+            var keepDoneState = !!(options && options.keepDoneState);
             if (!writer) return;
+            if (!totalStrokes) {
+                document.getElementById('strokeInfo').innerHTML = '「' + currentChar + '」暂无可练习笔画';
+                document.getElementById('quizResetBtn').disabled = true;
+                return;
+            }
             cancelAdvance();
             currentStroke = 0;
+            strokeOrderFocus = -1;
             quizMistakes = 0;
             quizCorrect = 0;
-            delete charDone[charIndex];
-            updateScoreBar();
+            if (!keepDoneState) {
+                delete charDone[charIndex];
+            }
             updateActiveUI();
 
             writer.hideCharacter();
@@ -1043,23 +1921,32 @@
 
             document.getElementById('strokeInfo').innerHTML =
                 '在「' + currentChar + '」格中书写 第 <span class="highlight">1</span> / ' + totalStrokes + ' 笔';
+            setTimeout(function() {
+                if (currentMode === 'quiz' && writer === writers[charIndex]) {
+                    showQuizHint(0, quizFirstGuideDelay);
+                }
+            }, 0);
 
             writer.quiz({
                 onCorrectStroke: function (data) {
                     quizCorrect++;
+                    setStrokeOrderFocus(data.strokeNum);
                     currentStroke = data.strokeNum + 1;
-                    updateScoreBar();
                     updateStrokeOrderBar();
+                    var currentStrokeName = '';
+                    if (charStrokeNames[charIndex] && charStrokeNames[charIndex][data.strokeNum]) {
+                        currentStrokeName = charStrokeNames[charIndex][data.strokeNum];
+                    }
 
-                    // 语音播报当前笔画名称
-                    if (voiceEnabled && charStrokeNames[charIndex] && charStrokeNames[charIndex][data.strokeNum]) {
-                        speakStrokeName(charStrokeNames[charIndex][data.strokeNum]);
+                    setStrokeOrderFocus(-1);
+                    if (currentStroke < totalStrokes) {
+                        showQuizHint(currentStroke, quizGuideDelay);
                     }
 
                     if (currentStroke < totalStrokes) {
                         var nameLabel = '';
-                        if (charStrokeNames[charIndex] && charStrokeNames[charIndex][data.strokeNum]) {
-                            nameLabel = '（' + getStrokeDisplayName(charStrokeNames[charIndex][data.strokeNum]) + '）';
+                        if (currentStrokeName) {
+                            nameLabel = '（' + getStrokeDisplayName(currentStrokeName) + '）';
                         }
                         document.getElementById('strokeInfo').innerHTML =
                             '<span class="correct">✓ ' + nameLabel + '</span> 第 <span class="highlight">' +
@@ -1068,14 +1955,17 @@
                 },
                 onMistake: function (data) {
                     quizMistakes++;
-                    updateScoreBar();
                     var hint = data.mistakesOnStroke >= 2 ? '，再错1次显示提示' : '';
                     document.getElementById('strokeInfo').innerHTML =
                         '<span class="wrong">✗ 再试试' + hint + '</span>';
+                    showQuizHint(currentStroke, quizGuideDelay);
                 },
                 onComplete: function (data) {
                     currentStroke = totalStrokes;
+                    setStrokeOrderFocus(-1);
                     updateStrokeOrderBar();
+                    markCurrentDone();
+                    showQuizHint(totalStrokes);
                     var msg = '🎉「' + currentChar + '」完成！';
                     if (data.totalMistakes === 0) {
                         msg += ' 零失误！';
@@ -1090,11 +1980,6 @@
 
         function enableQuizButtons() {
             document.getElementById('quizResetBtn').disabled = false;
-        }
-
-        function updateScoreBar() {
-            document.getElementById('correctCount').textContent = quizCorrect;
-            document.getElementById('mistakeCount').textContent = quizMistakes;
         }
 
         // ========== 自动跳转 ==========
@@ -1180,8 +2065,11 @@
         // ========== 语音开关 ==========
         document.getElementById('voiceToggle').addEventListener('change', function () {
             voiceEnabled = this.checked;
+            persistVoiceSetting();
         });
 
+        loadSettings();
+        updateModeUI();
         // ========== resize 重排 ==========
         var resizeTimer = null;
         window.addEventListener('resize', function() {
