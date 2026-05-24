@@ -326,7 +326,6 @@
             display: flex;
             flex-direction: column;
             gap: 10px;
-            min-height: 100%;
         }
 
         .screen {
@@ -966,13 +965,13 @@
                 <div class="input-top">
                     <div class="input-title-group">
                         <div class="section-title">练习内容</div>
-                        <div class="section-subtitle">输入最多 6 个汉字，加载后即可在演示或练习中切换使用。</div>
+                        <div class="section-subtitle">输入最多 24 个汉字，加载后即可在演示或练习中切换使用。</div>
                     </div>
                 </div>
 
                 <div class="input-body">
                     <div class="controls">
-                        <input type="text" id="charInput" maxlength="6" placeholder="输入汉字，最多6个" />
+                        <input type="text" id="charInput" maxlength="24" placeholder="输入汉字，最多24个" />
                         <button class="btn btn-primary" id="loadBtn" onclick="loadCharacter()">加载内容</button>
                     </div>
                 </div>
@@ -1388,7 +1387,7 @@
             var chars = input.match(/[\u4e00-\u9fff]/g);
             if (!chars || chars.length === 0) { alert('请输入有效的汉字！'); return; }
 
-            charArray = chars.slice(0, 6);
+            charArray = chars.slice(0, 24);
             charIndex = 0;
             charDone = {};
             loadedCount = 0;
@@ -1420,17 +1419,21 @@
                 return { size: Math.round(qs), padding: Math.round(qs * 0.06) };
             }
 
-            // 演示模式：一行最多 3 个
-            var perRow = Math.min(count, 3);
+            // 演示模式：根据字数动态调整每行数量，字多时每行排更多，避免卡片过高
+            var maxPerRow;
+            if (count <= 6) maxPerRow = 3;
+            else if (count <= 12) maxPerRow = 4;
+            else if (count <= 20) maxPerRow = 5;
+            else maxPerRow = 6;
+
+            var minCell = count > 12 ? 58 : 70;
+            // 受可用宽度限制的每行上限
+            var widthCap = Math.max(2, Math.floor((available + gap) / (minCell + gap)));
+            var perRow = Math.min(count, maxPerRow, widthCap);
             var idealSize = Math.floor((available - gap * (perRow - 1)) / perRow);
 
-            if (idealSize < 70) {
-                perRow = Math.max(2, Math.floor((available + gap) / (70 + gap)));
-                perRow = Math.min(perRow, 3);
-                idealSize = Math.floor((available - gap * (perRow - 1)) / perRow);
-            }
-
-            var cellSize = Math.max(72, Math.min(136, idealSize));
+            var minSize = count > 12 ? 56 : 72;
+            var cellSize = Math.max(minSize, Math.min(136, idealSize));
             return { size: cellSize, padding: Math.max(4, Math.round(cellSize * 0.05)) };
         }
 
