@@ -242,19 +242,19 @@
         }
 
         .controls {
-            display: grid;
-            grid-template-columns: minmax(0, 1fr) auto;
+            display: flex;
+            flex-direction: column;
             gap: 10px;
-            align-items: center;
         }
 
-        .controls input {
+        .controls textarea {
             width: 100%;
             min-width: 0;
-            height: 54px;
-            padding: 0 18px;
+            min-height: 120px;
+            padding: 14px 18px;
             text-align: left;
             font-size: 22px;
+            line-height: 1.6;
             border: 1px solid rgba(114, 90, 53, 0.12);
             border-radius: 18px;
             outline: none;
@@ -263,18 +263,24 @@
             color: var(--text);
             background: var(--surface-strong);
             box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7);
+            font-family: inherit;
+            resize: none;
         }
 
-        .controls input::placeholder {
+        .controls textarea::placeholder {
             color: #98a198;
             letter-spacing: 0.04em;
             font-size: 16px;
         }
 
-        .controls input:focus {
+        .controls textarea:focus {
             border-color: rgba(31, 122, 104, 0.42);
             box-shadow: 0 0 0 5px rgba(31, 122, 104, 0.12);
             background: #fff;
+        }
+
+        .controls .btn {
+            flex-shrink: 0;
         }
 
         .btn {
@@ -390,7 +396,7 @@
         .stroke-order-shell,
         .score-shell,
         .grids-shell,
-        .quiz-char-tabs {
+        .char-tabs {
             position: relative;
             z-index: 1;
         }
@@ -409,6 +415,18 @@
             font-size: 18px;
             font-weight: 700;
             letter-spacing: 0.04em;
+        }
+
+        .stage-titles {
+            display: flex;
+            align-items: baseline;
+            flex-wrap: wrap;
+            gap: 4px 10px;
+            min-width: 0;
+        }
+
+        .stage-titles .stage-subtitle {
+            margin-top: 0;
         }
 
         .stage-subtitle {
@@ -572,27 +590,28 @@
             font-weight: 700;
         }
 
-        .quiz-char-tabs {
+        .char-tabs {
             display: none;
-            gap: 8px;
-            flex-wrap: wrap;
+            gap: 6px;
+            grid-template-columns: repeat(var(--tabs-per-row, 8), minmax(0, 44px));
             justify-content: center;
+            width: 100%;
             margin-bottom: 10px;
         }
 
-        .quiz-char-tabs.visible {
-            display: flex;
+        .char-tabs.visible {
+            display: grid;
         }
 
-        .quiz-char-tab {
-            width: 42px;
-            height: 42px;
+        .char-tab {
+            width: 100%;
+            aspect-ratio: 1;
             display: flex;
             align-items: center;
             justify-content: center;
             font-size: 18px;
             border: 1px solid rgba(114, 90, 53, 0.12);
-            border-radius: 14px;
+            border-radius: 12px;
             cursor: pointer;
             background: rgba(255, 255, 255, 0.88);
             color: var(--text);
@@ -600,22 +619,22 @@
             position: relative;
         }
 
-        .quiz-char-tab:active {
+        .char-tab:active {
             transform: scale(0.95);
         }
 
-        .quiz-char-tab.active {
+        .char-tab.active {
             border-color: rgba(31, 122, 104, 0.24);
             background: linear-gradient(135deg, rgba(31, 122, 104, 0.9), rgba(44, 154, 131, 0.92));
             color: #fff;
             box-shadow: 0 12px 24px rgba(31, 122, 104, 0.2);
         }
 
-        .quiz-char-tab.done {
+        .char-tab.done {
             border-color: rgba(47, 143, 91, 0.24);
         }
 
-        .quiz-char-tab.done::after {
+        .char-tab.done::after {
             content: '✓';
             position: absolute;
             top: -4px;
@@ -632,7 +651,7 @@
             line-height: 1;
         }
 
-        .quiz-char-tab.active.done::after {
+        .char-tab.active.done::after {
             background: #fff;
             color: var(--primary);
         }
@@ -695,11 +714,11 @@
             background: var(--primary);
         }
 
-        .grids-row.quiz-mode .grid-cell {
+        .grids-row.single-mode .grid-cell {
             display: none;
         }
 
-        .grids-row.quiz-mode .grid-cell.active {
+        .grids-row.single-mode .grid-cell.active {
             display: block;
         }
 
@@ -853,8 +872,7 @@
                 font-size: 30px;
             }
 
-            .controls input {
-                height: 58px;
+            .controls textarea {
                 font-size: 24px;
             }
 
@@ -906,14 +924,8 @@
                 padding: 12px;
             }
 
-            .controls {
-                grid-template-columns: 1fr;
-            }
-
-            .controls input {
-                height: 50px;
+            .controls textarea {
                 font-size: 20px;
-                text-align: center;
             }
 
             .grids-shell {
@@ -924,9 +936,12 @@
                 border-radius: 0;
             }
 
-            .quiz-char-tab {
-                width: 38px;
-                height: 38px;
+            .char-tabs {
+                gap: 4px;
+            }
+
+            .char-tab {
+                font-size: 16px;
             }
 
             .button-row {
@@ -971,7 +986,7 @@
 
                 <div class="input-body">
                     <div class="controls">
-                        <input type="text" id="charInput" maxlength="24" placeholder="输入汉字，最多24个" />
+                        <textarea id="charInput" maxlength="24" placeholder="输入汉字，最多24个"></textarea>
                         <button class="btn btn-primary" id="loadBtn" onclick="loadCharacter()">加载内容</button>
                     </div>
                 </div>
@@ -980,7 +995,7 @@
             <section class="practice-card" id="practiceCard">
                 <div class="screen active" id="screenDemo">
                     <div class="stage-top">
-                        <div>
+                        <div class="stage-titles">
                             <div class="stage-title">演示模式</div>
                             <div class="stage-subtitle">逐笔查看当前汉字的书写顺序。</div>
                         </div>
@@ -989,8 +1004,10 @@
                     <div class="stage-card">
                         <div class="info sr-only" id="strokeInfo" aria-live="polite">请输入汉字并点击「加载内容」</div>
 
+                        <div class="char-tabs" id="demoCharTabs"></div>
+
                         <div class="grids-shell">
-                            <div class="grids-row" id="demoGridsRow"></div>
+                            <div class="grids-row single-mode" id="demoGridsRow"></div>
                         </div>
 
                         <div class="stroke-order-shell">
@@ -1009,17 +1026,17 @@
 
                 <div class="screen" id="screenQuiz">
                     <div class="stage-top">
-                        <div>
+                        <div class="stage-titles">
                             <div class="stage-title">练习模式</div>
                             <div class="stage-subtitle">手写临摹并实时判断笔顺是否正确。</div>
                         </div>
                     </div>
 
                     <div class="stage-card">
-                        <div class="quiz-char-tabs" id="quizCharTabs"></div>
+                        <div class="char-tabs" id="quizCharTabs"></div>
 
                         <div class="grids-shell">
-                            <div class="grids-row quiz-mode" id="quizGridsRow"></div>
+                            <div class="grids-row single-mode" id="quizGridsRow"></div>
                         </div>
 
                         <div class="stroke-order-shell">
@@ -1366,7 +1383,7 @@
 
             currentMode = mode;
             updateModeUI();
-            updateQuizTabs();
+            updateCharTabs();
 
             if (charArray.length > 0 && mode !== 'settings') {
                 rebuildCurrentMode();
@@ -1406,35 +1423,10 @@
                 ? document.querySelector('#screenQuiz .grids-shell')
                 : document.querySelector('#screenDemo .grids-shell');
             var available = shell ? shell.clientWidth - 8 : Math.min(vw, 720) - (vw <= 360 ? 20 : 32);
-            var gap = vw <= 360 ? 6 : 10;
 
-            if (count === 1) {
-                var s = Math.min(240, available * 0.72);
-                return { size: Math.round(s), padding: Math.round(s * 0.07) };
-            }
-
-            // quiz 模式：只显示一个大格子，尺寸接近单字
-            if (currentMode === 'quiz') {
-                var qs = Math.min(280, available * 0.82);
-                return { size: Math.round(qs), padding: Math.round(qs * 0.06) };
-            }
-
-            // 演示模式：根据字数动态调整每行数量，字多时每行排更多，避免卡片过高
-            var maxPerRow;
-            if (count <= 6) maxPerRow = 3;
-            else if (count <= 12) maxPerRow = 4;
-            else if (count <= 20) maxPerRow = 5;
-            else maxPerRow = 6;
-
-            var minCell = count > 12 ? 58 : 70;
-            // 受可用宽度限制的每行上限
-            var widthCap = Math.max(2, Math.floor((available + gap) / (minCell + gap)));
-            var perRow = Math.min(count, maxPerRow, widthCap);
-            var idealSize = Math.floor((available - gap * (perRow - 1)) / perRow);
-
-            var minSize = count > 12 ? 56 : 72;
-            var cellSize = Math.max(minSize, Math.min(136, idealSize));
-            return { size: cellSize, padding: Math.max(4, Math.round(cellSize * 0.05)) };
+            // 演示和练习模式都只显示一个大格子
+            var size = Math.min(280, available * 0.82);
+            return { size: Math.round(size), padding: Math.round(size * 0.06) };
         }
 
         // ========== 创建所有格子 ==========
@@ -1491,7 +1483,7 @@
             charIndex = 0;
             currentChar = charArray[0];
             updateActiveUI();
-            renderQuizTabs();
+            renderCharTabs();
             updateModeUI();
         }
 
@@ -1640,7 +1632,7 @@
                 cells[i].classList.toggle('active', i === charIndex);
                 cells[i].classList.toggle('done', !!charDone[i]);
             }
-            updateQuizTabs();
+            updateCharTabs();
         }
 
         // ========== 演示模式 ==========
@@ -2096,34 +2088,72 @@
             }, 800);
         }
 
-        // ========== Quiz 切字标签 ==========
-        function renderQuizTabs() {
-            var container = document.getElementById('quizCharTabs');
-            container.innerHTML = '';
-            if (currentMode !== 'quiz' || charArray.length <= 1) {
-                container.classList.remove('visible');
-                return;
+        // ========== 字符切换标签（演示 / 练习模式共用） ==========
+        function getCharTabContainers() {
+            return [
+                document.getElementById('demoCharTabs'),
+                document.getElementById('quizCharTabs')
+            ].filter(Boolean);
+        }
+
+        function getActiveCharTabContainer() {
+            if (currentMode === 'demo') return document.getElementById('demoCharTabs');
+            if (currentMode === 'quiz') return document.getElementById('quizCharTabs');
+            return null;
+        }
+
+        function renderCharTabs() {
+            var containers = getCharTabContainers();
+            for (var c = 0; c < containers.length; c++) {
+                containers[c].innerHTML = '';
+                containers[c].classList.remove('visible');
             }
-            container.classList.add('visible');
+            var active = getActiveCharTabContainer();
+            if (!active || charArray.length <= 1) return;
+
+            applyCharTabsLayout(active);
+            active.classList.add('visible');
             for (var i = 0; i < charArray.length; i++) {
                 var tab = document.createElement('div');
-                tab.className = 'quiz-char-tab' + (i === charIndex ? ' active' : '') + (charDone[i] ? ' done' : '');
+                tab.className = 'char-tab' + (i === charIndex ? ' active' : '') + (charDone[i] ? ' done' : '');
                 tab.textContent = charArray[i];
                 tab.onclick = (function(idx) {
                     return function() { selectChar(idx); };
                 })(i);
-                container.appendChild(tab);
+                active.appendChild(tab);
             }
         }
 
-        function updateQuizTabs() {
-            if (currentMode !== 'quiz' || charArray.length <= 1) {
-                document.getElementById('quizCharTabs').classList.remove('visible');
+        // 计算每行字数，保证标签栏最多 3 行（24 字 → 8/行）
+        function applyCharTabsLayout(container) {
+            if (!container || !charArray.length) return;
+            var count = charArray.length;
+            var perRow;
+            if (count <= 8) {
+                perRow = count;            // ≤8 字单行
+            } else if (count <= 16) {
+                perRow = Math.ceil(count / 2);  // 9–16 字两行
+            } else {
+                perRow = Math.ceil(count / 3);  // 17–24 字三行（24 → 8）
+            }
+            container.style.setProperty('--tabs-per-row', perRow);
+        }
+
+        function updateCharTabs() {
+            var containers = getCharTabContainers();
+            var active = getActiveCharTabContainer();
+            if (!active || charArray.length <= 1) {
+                for (var c = 0; c < containers.length; c++) {
+                    containers[c].classList.remove('visible');
+                }
                 return;
             }
-            var tabs = document.querySelectorAll('.quiz-char-tab');
+            for (var k = 0; k < containers.length; k++) {
+                containers[k].classList.toggle('visible', containers[k] === active);
+            }
+            var tabs = active.querySelectorAll('.char-tab');
             if (tabs.length === 0) {
-                renderQuizTabs();
+                renderCharTabs();
                 return;
             }
             for (var i = 0; i < tabs.length; i++) {
@@ -2133,8 +2163,12 @@
         }
 
         // ========== 回车加载 ==========
+        // textarea 中 Enter 用于换行，使用 Cmd/Ctrl+Enter 触发加载
         document.getElementById('charInput').addEventListener('keydown', function (e) {
-            if (e.key === 'Enter') loadCharacter();
+            if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
+                e.preventDefault();
+                loadCharacter();
+            }
         });
 
         // ========== 语音开关 ==========
