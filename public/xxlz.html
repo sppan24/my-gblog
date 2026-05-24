@@ -332,12 +332,15 @@
             display: flex;
             flex-direction: column;
             gap: 10px;
+            min-height: 100%;
         }
 
         .screen {
             display: none;
             flex-direction: column;
-            gap: 10px;
+            gap: 6px;
+            flex: 1;
+            min-height: 0;
         }
 
         .screen.active {
@@ -408,7 +411,7 @@
             align-items: center;
             justify-content: space-between;
             gap: 10px;
-            margin-bottom: 10px;
+            margin-bottom: 0;
         }
 
         .stage-title {
@@ -445,6 +448,56 @@
             display: flex;
             flex-direction: column;
             gap: 10px;
+        }
+
+        .setting-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+            min-height: 56px;
+            padding: 0 16px;
+            border-radius: 18px;
+            background: rgba(255, 255, 255, 0.72);
+            border: 1px solid rgba(114, 90, 53, 0.08);
+            color: #4d584d;
+            font-size: 14px;
+            font-weight: 600;
+            user-select: none;
+            width: 100%;
+        }
+
+        .setting-row .setting-copy {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .speed-input {
+            width: 64px;
+            height: 32px;
+            padding: 0 6px;
+            border: 1px solid rgba(31, 122, 104, 0.18);
+            border-radius: 8px;
+            background: #fff;
+            font: inherit;
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--primary);
+            text-align: center;
+            outline: none;
+            transition: border-color 0.15s, box-shadow 0.15s;
+            flex-shrink: 0;
+            -moz-appearance: textfield;
+        }
+
+        .speed-input::-webkit-outer-spin-button,
+        .speed-input::-webkit-inner-spin-button {
+            opacity: 1;
+        }
+
+        .speed-input:focus {
+            border-color: rgba(31, 122, 104, 0.5);
+            box-shadow: 0 0 0 3px rgba(31, 122, 104, 0.12);
         }
 
         .setting-copy {
@@ -592,8 +645,8 @@
 
         .char-tabs {
             display: none;
-            gap: 6px;
-            grid-template-columns: repeat(var(--tabs-per-row, 8), minmax(0, 44px));
+            gap: 4px;
+            grid-template-columns: repeat(8, minmax(0, 36px));
             justify-content: center;
             width: 100%;
             margin-bottom: 10px;
@@ -845,17 +898,21 @@
 
         .button-row {
             display: grid;
-            grid-template-columns: repeat(2, minmax(0, 1fr));
             gap: 10px;
             width: 100%;
+            margin-top: auto;
         }
 
         .button-row .btn {
             width: 100%;
         }
 
-        #quizButtons .btn {
-            grid-column: 1 / -1;
+        #demoButtons {
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
+
+        #quizButtons {
+            grid-template-columns: 1fr;
         }
 
         @media (min-width: 640px) {
@@ -879,10 +936,6 @@
             .btn {
                 min-height: 54px;
                 font-size: 16px;
-            }
-
-            .button-row {
-                grid-template-columns: repeat(4, minmax(0, 1fr));
             }
 
             .tabbar {
@@ -937,7 +990,7 @@
             }
 
             .char-tabs {
-                gap: 4px;
+                gap: 2px;
             }
 
             .char-tab {
@@ -945,7 +998,12 @@
             }
 
             .button-row {
-                grid-template-columns: 1fr 1fr;
+                gap: 6px;
+            }
+
+            .button-row .btn {
+                padding: 0 8px;
+                font-size: 14px;
             }
 
             .hero-meta {
@@ -1019,7 +1077,6 @@
                     <div class="button-row" id="demoButtons">
                         <button class="btn btn-stroke" id="nextStrokeBtn" onclick="showNextStroke()" disabled>下一笔</button>
                         <button class="btn btn-replay" id="replayBtn" onclick="replayStroke()" disabled>重复当前笔</button>
-                        <button class="btn btn-reset" id="resetBtn" onclick="resetStrokes()" disabled>重置演示</button>
                         <button class="btn btn-animate" id="animateBtn" onclick="animateAll()" disabled>自动书写</button>
                     </div>
                 </div>
@@ -1080,6 +1137,22 @@
                                     <span class="switch-slider"></span>
                                 </span>
                             </label>
+
+                            <div class="setting-row">
+                                <div class="setting-copy">
+                                    <span class="setting-title">笔画速度</span>
+                                    <span class="setting-desc">笔画动画的快慢，可设置 0.1 ~ 5 倍。</span>
+                                </div>
+                                <input type="number" id="strokeSpeedInput" class="speed-input" min="0.1" max="5" step="0.1" value="1" aria-label="笔画速度倍率" />
+                            </div>
+
+                            <div class="setting-row">
+                                <div class="setting-copy">
+                                    <span class="setting-title">发音速度</span>
+                                    <span class="setting-desc">发音的语速，可设置 0.1 ~ 5 倍。</span>
+                                </div>
+                                <input type="number" id="voiceSpeedInput" class="speed-input" min="0.1" max="5" step="0.1" value="1" aria-label="发音速度倍率" />
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -1123,9 +1196,13 @@
         let charStrokeNames = [];    // 每个字的笔画名称数组（来自 cnchar）
         let voiceEnabled = true;     // 笔画语音开关
         let charVoiceEnabled = true; // 汉字读音开关
+        let strokeSpeed = 1;         // 笔画动画速度倍率
+        let voiceSpeed = 1;          // 语音播放速率
         let strokeOrderFocus = -1;
         var voiceStorageKey = 'hanzi-stroke:voice-enabled';
         var charVoiceStorageKey = 'hanzi-stroke:char-voice-enabled';
+        var strokeSpeedKey = 'hanzi-stroke:stroke-speed';
+        var voiceSpeedKey = 'hanzi-stroke:voice-speed';
         var charAudioCache = {};     // 汉字音频缓存
         var quizHintTimer = null;
         var quizGuideWriter = null;
@@ -1146,9 +1223,19 @@
                 if (storedCharVoiceEnabled !== null) {
                     charVoiceEnabled = storedCharVoiceEnabled === 'true';
                 }
+                var storedStrokeSpeed = parseFloat(localStorage.getItem(strokeSpeedKey));
+                if (!isNaN(storedStrokeSpeed) && storedStrokeSpeed > 0) {
+                    strokeSpeed = clampSpeed(storedStrokeSpeed);
+                }
+                var storedVoiceSpeed = parseFloat(localStorage.getItem(voiceSpeedKey));
+                if (!isNaN(storedVoiceSpeed) && storedVoiceSpeed > 0) {
+                    voiceSpeed = clampSpeed(storedVoiceSpeed);
+                }
             } catch (e) {}
             document.getElementById('voiceToggle').checked = voiceEnabled;
             document.getElementById('charVoiceToggle').checked = charVoiceEnabled;
+            document.getElementById('strokeSpeedInput').value = strokeSpeed;
+            document.getElementById('voiceSpeedInput').value = voiceSpeed;
         }
 
         function persistVoiceSetting() {
@@ -1156,6 +1243,31 @@
                 localStorage.setItem(voiceStorageKey, String(voiceEnabled));
                 localStorage.setItem(charVoiceStorageKey, String(charVoiceEnabled));
             } catch (e) {}
+        }
+
+        function persistSpeedSettings() {
+            try {
+                localStorage.setItem(strokeSpeedKey, String(strokeSpeed));
+                localStorage.setItem(voiceSpeedKey, String(voiceSpeed));
+            } catch (e) {}
+        }
+
+        // 把数值钳到 [0.1, 5] 范围内，无效输入回退到 1
+        function clampSpeed(val) {
+            val = parseFloat(val);
+            if (isNaN(val) || val <= 0) return 1;
+            return Math.max(0.1, Math.min(5, Math.round(val * 10) / 10));
+        }
+
+        // 给数字 input 绑定变更事件
+        function bindSpeedInput(id, onChange) {
+            var input = document.getElementById(id);
+            if (!input) return;
+            input.addEventListener('change', function () {
+                var val = clampSpeed(this.value);
+                this.value = val;
+                onChange(val);
+            });
         }
 
         function ensureQuizGuideLayer(size) {
@@ -1194,7 +1306,7 @@
                     radicalColor: 'rgba(31, 122, 104, 0.72)',
                     highlightColor: 'rgba(31, 122, 104, 0.72)',
                     delayBetweenStrokes: 0,
-                    strokeAnimationSpeed: 0.55,
+                    strokeAnimationSpeed: 0.55 * strokeSpeed,
                     charDataLoader: function (c, onLoad) {
                         loadLocalCharData(c).then(onLoad).catch(function() {});
                     }
@@ -1505,7 +1617,7 @@
                 outlineColor: '#ddd4c7',
                 drawingColor: '#1f7a68',
                 drawingWidth: size > 150 ? 6 : (size > 90 ? 4 : 3),
-                strokeAnimationSpeed: 1,
+                strokeAnimationSpeed: strokeSpeed,
                 delayBetweenStrokes: 0,
                 highlightColor: '#9fd9cb',
                 showHintAfterMisses: 3,
@@ -1624,6 +1736,9 @@
                 // 播放汉字读音
                 speakCharacter(currentChar);
             }
+
+            // 切换单字时复用「加载内容」的滚动逻辑
+            scrollToActiveScreen({ smooth: true, correct: true });
         }
 
         function updateActiveUI() {
@@ -1709,21 +1824,6 @@
             });
         }
 
-        function resetStrokes() {
-            if (!writer) return;
-            cancelAdvance();
-            isAnimating = false;
-            currentStroke = 0;
-            strokeOrderFocus = -1;
-            delete charDone[charIndex];
-            writer.hideCharacter();
-            writer.showOutline();
-            updateInfo();
-            updateActiveUI();
-            document.getElementById('nextStrokeBtn').disabled = false;
-            document.getElementById('replayBtn').disabled = true;
-        }
-
         function animateAll() {
             if (!writer) return;
 
@@ -1737,7 +1837,6 @@
             document.getElementById('nextStrokeBtn').disabled = true;
             document.getElementById('replayBtn').disabled = true;
             document.getElementById('animateBtn').disabled = true;
-            document.getElementById('resetBtn').disabled = true;
 
             // 锁定当前字的信息
             var lockedWriter = writer;
@@ -1755,7 +1854,6 @@
                     document.getElementById('strokeInfo').innerHTML =
                         '「' + lockedChar + '」完成！共 <span class="highlight">' + lockedTotal + '</span> 笔 ✅';
                     document.getElementById('animateBtn').disabled = false;
-                    document.getElementById('resetBtn').disabled = false;
                     document.getElementById('replayBtn').disabled = false;
                     document.getElementById('nextStrokeBtn').disabled = true;
                     if (charArray.length > 1) autoAdvance();
@@ -1808,14 +1906,12 @@
         function enableDemoButtons() {
             document.getElementById('nextStrokeBtn').disabled = false;
             document.getElementById('replayBtn').disabled = (currentStroke <= 0);
-            document.getElementById('resetBtn').disabled = false;
             document.getElementById('animateBtn').disabled = false;
         }
 
         function disableDemoButtons() {
             document.getElementById('nextStrokeBtn').disabled = true;
             document.getElementById('replayBtn').disabled = true;
-            document.getElementById('resetBtn').disabled = true;
             document.getElementById('animateBtn').disabled = true;
         }
 
@@ -1917,6 +2013,7 @@
                 return;
             }
             var player = strokeAudioCache[displayName].cloneNode();
+            player.playbackRate = voiceSpeed;
             player.onended = function () { if (onDone) onDone(); };
             player.onerror = function () { if (onDone) onDone(); };
             player.play().catch(function () { if (onDone) onDone(); });
@@ -1943,6 +2040,7 @@
                 return;
             }
             var player = charAudioCache[char].cloneNode();
+            player.playbackRate = voiceSpeed;
             player.onended = function () { if (onDone) onDone(); };
             player.onerror = function () { if (onDone) onDone(); };
             player.play().catch(function () { if (onDone) onDone(); });
@@ -2111,7 +2209,6 @@
             var active = getActiveCharTabContainer();
             if (!active || charArray.length <= 1) return;
 
-            applyCharTabsLayout(active);
             active.classList.add('visible');
             for (var i = 0; i < charArray.length; i++) {
                 var tab = document.createElement('div');
@@ -2122,21 +2219,6 @@
                 })(i);
                 active.appendChild(tab);
             }
-        }
-
-        // 计算每行字数，保证标签栏最多 3 行（24 字 → 8/行）
-        function applyCharTabsLayout(container) {
-            if (!container || !charArray.length) return;
-            var count = charArray.length;
-            var perRow;
-            if (count <= 8) {
-                perRow = count;            // ≤8 字单行
-            } else if (count <= 16) {
-                perRow = Math.ceil(count / 2);  // 9–16 字两行
-            } else {
-                perRow = Math.ceil(count / 3);  // 17–24 字三行（24 → 8）
-            }
-            container.style.setProperty('--tabs-per-row', perRow);
         }
 
         function updateCharTabs() {
@@ -2180,6 +2262,19 @@
         document.getElementById('charVoiceToggle').addEventListener('change', function () {
             charVoiceEnabled = this.checked;
             persistVoiceSetting();
+        });
+
+        // ========== 速度设置 ==========
+        bindSpeedInput('strokeSpeedInput', function (val) {
+            strokeSpeed = val;
+            persistSpeedSettings();
+            // 切回演示/练习时由 switchMode → rebuildCurrentMode 重建 writers，
+            // 应用新速度；这里无需立即重建。
+        });
+
+        bindSpeedInput('voiceSpeedInput', function (val) {
+            voiceSpeed = val;
+            persistSpeedSettings();
         });
 
         loadSettings();
