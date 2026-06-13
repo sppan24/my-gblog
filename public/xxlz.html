@@ -1137,6 +1137,16 @@
                                     <span class="switch-slider"></span>
                                 </span>
                             </label>
+                            <label class="voice-toggle" for="autoAnimateToggle">
+                                <div class="setting-copy">
+                                    <span class="setting-title">跳转自动书写</span>
+                                    <span class="setting-desc">开启后，自动切换到下一个字时自动开始书写。</span>
+                                </div>
+                                <span class="switch">
+                                    <input type="checkbox" id="autoAnimateToggle" />
+                                    <span class="switch-slider"></span>
+                                </span>
+                            </label>
 
                             <div class="setting-row">
                                 <div class="setting-copy">
@@ -1223,6 +1233,10 @@
                 if (storedCharVoiceEnabled !== null) {
                     charVoiceEnabled = storedCharVoiceEnabled === 'true';
                 }
+                var storedAutoAnimateOnAdvance = localStorage.getItem(advanceAutoAnimateKey);
+                if (storedAutoAnimateOnAdvance !== null) {
+                    autoAnimateOnAdvance = storedAutoAnimateOnAdvance === 'true';
+                }
                 var storedStrokeSpeed = parseFloat(localStorage.getItem(strokeSpeedKey));
                 if (!isNaN(storedStrokeSpeed) && storedStrokeSpeed > 0) {
                     strokeSpeed = clampSpeed(storedStrokeSpeed);
@@ -1236,12 +1250,14 @@
             document.getElementById('charVoiceToggle').checked = charVoiceEnabled;
             document.getElementById('strokeSpeedInput').value = strokeSpeed;
             document.getElementById('voiceSpeedInput').value = voiceSpeed;
+            document.getElementById('autoAnimateToggle').checked = autoAnimateOnAdvance;
         }
 
         function persistVoiceSetting() {
             try {
                 localStorage.setItem(voiceStorageKey, String(voiceEnabled));
                 localStorage.setItem(charVoiceStorageKey, String(charVoiceEnabled));
+                localStorage.setItem(advanceAutoAnimateKey, String(autoAnimateOnAdvance));
             } catch (e) {}
         }
 
@@ -1690,8 +1706,9 @@
         // ========== 选字 ==========
         function selectChar(idx) {
             if (idx === charIndex && !isAnimating) return;
-
+            var pendingAutoAnimate = advanceAutoAnimatePending;
             cancelAdvance();
+            advanceAutoAnimatePending = pendingAutoAnimate;
             quizSessionId++;
 
             // 如果正在自动书写，先取消当前动画
@@ -1734,6 +1751,16 @@
                 updateInfo();
                 enableDemoButtons();
                 // 播放汉字读音
+                speakCharacter(currentChar);
+            }
+
+            // 自动跳转后自动书写：等读音结束后触发
+            if (advanceAutoAnimatePending && autoAnimateOnAdvance && currentMode === 'demo') {
+                advanceAutoAnimatePending = false;
+                speakCharacter(currentChar, function () {
+                    animateAll();
+                });
+            } else {
                 speakCharacter(currentChar);
             }
 
@@ -2142,6 +2169,9 @@
                 beginQuizInteraction();
             }
         }
+        var autoAnimateOnAdvance = false; // 自动跳转后自动书写
+        var advanceAutoAnimateKey = 'hanzi-stroke:auto-animate-on-advance';
+        var advanceAutoAnimatePending = false; // selectChar后是否自动书写
 
         function enableQuizButtons() {
             document.getElementById('quizResetBtn').disabled = false;
@@ -2156,6 +2186,7 @@
         }
 
         function cancelAdvance() {
+            advanceAutoAnimatePending = false;
             if (advanceTimer) {
                 clearTimeout(advanceTimer);
                 advanceTimer = null;
@@ -2173,6 +2204,7 @@
                     (function(nextIdx) {
                         advanceTimer = setTimeout(function() {
                             advanceTimer = null;
+                            advanceAutoAnimatePending = true;
                             selectChar(nextIdx);
                         }, 800);
                     })(idx);
@@ -2261,6 +2293,11 @@
 
         document.getElementById('charVoiceToggle').addEventListener('change', function () {
             charVoiceEnabled = this.checked;
+            persistVoiceSetting();
+        });
+
+        document.getElementById('autoAnimateToggle').addEventListener('change', function () {
+            autoAnimateOnAdvance = this.checked;
             persistVoiceSetting();
         });
 
