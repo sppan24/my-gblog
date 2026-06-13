@@ -1750,18 +1750,15 @@
             } else {
                 updateInfo();
                 enableDemoButtons();
-                // 播放汉字读音
-                speakCharacter(currentChar);
-            }
-
-            // 自动跳转后自动书写：等读音结束后触发
-            if (advanceAutoAnimatePending && autoAnimateOnAdvance && currentMode === 'demo') {
-                advanceAutoAnimatePending = false;
-                speakCharacter(currentChar, function () {
-                    animateAll();
-                });
-            } else {
-                speakCharacter(currentChar);
+                // 播放汉字读音（自动书写时带回调）
+                if (advanceAutoAnimatePending && autoAnimateOnAdvance) {
+                    advanceAutoAnimatePending = false;
+                    speakCharacter(currentChar, function () {
+                        animateAll();
+                    });
+                } else {
+                    speakCharacter(currentChar);
+                }
             }
 
             // 切换单字时复用「加载内容」的滚动逻辑
