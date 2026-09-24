@@ -1,11 +1,10 @@
-// 小小练字 PWA Service Worker (v2)
-var VERSION = 'v2';
+// 小小练字 PWA Service Worker (v3)
+var VERSION = 'v4';
 var SHELL_CACHE = 'hanzi-shell-' + VERSION;
 var RUNTIME_CACHE = 'hanzi-runtime-' + VERSION;
 
 var SHELL_ASSETS = [
     './',
-    './xxlz.html',
     './index.html',
     './manifest.json',
     './cnchar.min.js',
@@ -28,9 +27,7 @@ self.addEventListener('install', function (event) {
         caches.open(SHELL_CACHE)
             .then(function (cache) {
                 return Promise.all(SHELL_ASSETS.map(function (url) {
-                    return cache.add(url).catch(function (err) {
-                        console.warn('SW: shell asset missing, skipped:', url, err);
-                    });
+                    return cache.add(url).catch(function () { /* 单个资产缺失不阻断安装 */ });
                 }));
             })
             .then(function () { return self.skipWaiting(); })
@@ -57,11 +54,38 @@ self.addEventListener('fetch', function (event) {
     var isData = url.pathname.indexOf('/hanzi-data/') !== -1;
     var isVoice = url.pathname.indexOf('/voice/') !== -1;
 
-    if (isData || isVoice) {
-        // cache-first：用过即缓存，离线可复用
-        event.respondWith(handleRuntime(event.request));
+    // 导航请求（HTML）：网络优先，失败才回缓存。
+    // 响应若是 redirect（如 /xxlz.html 308 → /xxlz），以最终 URL 重新请求，
+    // 避免 iOS standalone 模式下 redirected 导航响应触发无限刷新。
+    if (event.request.mode === 'navigate') {
+        event.respondWith(
+            fetch(event.request).then(function (res) {
+                if (res.redirected) {
+                    return fetch(res.url, { cache: 'reload' }).then(function (final) {
+                        if (final.ok) {
+                            var clone = final.clone();
+                            event.waitUntil(caches.open(SHELL_CACHE).then(function (c) { c.put(final.url, clone); }));
+                        }
+                        return final;
+                    });
+                }
+                if (res.ok) {
+                    var clone = res.clone();
+                    event.waitUntil(caches.open(SHELL_CACHE).then(function (c) { c.put(event.request, clone); }));
+                }
+                return res;
+            }).catch(function (e) {
+                return caches.match(event.request).then(function (cached) {
+                    if (cached && !cached.redirected) return cached;
+                    return caches.match('./index.html').then(function (c2) {
+                        return c2 || cached;
+                    });
+                });
+            })
+        );
         return;
     }
+
 
     // 其他同源请求：缓存优先，未命中走网络并回填
     event.respondWith(

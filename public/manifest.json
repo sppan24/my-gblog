@@ -2,7 +2,7 @@
     "name": "小小练字",
     "short_name": "练字",
     "description": "汉字笔顺演示与练习",
-    "start_url": "./xxlz.html",
+    "start_url": "./xxlz",
     "display": "standalone",
     "orientation": "any",
     "background_color": "#f6efe3",
