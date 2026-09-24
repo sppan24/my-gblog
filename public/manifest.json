@@ -1,0 +1,24 @@
+{
+    "name": "小小练字",
+    "short_name": "练字",
+    "description": "汉字笔顺演示与练习",
+    "start_url": "./xxlz.html",
+    "display": "standalone",
+    "orientation": "any",
+    "background_color": "#f6efe3",
+    "theme_color": "#1f7a68",
+    "icons": [
+        {
+            "src": "./assets/icon-512.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "any"
+        },
+        {
+            "src": "./assets/icon-512-maskable.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "maskable"
+        }
+    ]
+}

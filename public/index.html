@@ -3,7 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>小小练字</title>
+    <meta name="theme-color" content="#1f7a68">
+    <link rel="manifest" href="./manifest.json">
+    <link rel="apple-touch-icon" href="./assets/icon-512.png">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="小小练字">
     <script src="./hanzi-writer.min.js"></script>
     <script src="./cnchar.min.js"></script>
     <script src="./cnchar.order.min.js"></script>
@@ -242,19 +247,19 @@
         }
 
         .controls {
-            display: grid;
-            grid-template-columns: minmax(0, 1fr) auto;
+            display: flex;
+            flex-direction: column;
             gap: 10px;
-            align-items: center;
         }
 
-        .controls input {
+        .controls textarea {
             width: 100%;
             min-width: 0;
-            height: 54px;
-            padding: 0 18px;
+            min-height: 120px;
+            padding: 14px 18px;
             text-align: left;
             font-size: 22px;
+            line-height: 1.6;
             border: 1px solid rgba(114, 90, 53, 0.12);
             border-radius: 18px;
             outline: none;
@@ -263,18 +268,24 @@
             color: var(--text);
             background: var(--surface-strong);
             box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7);
+            font-family: inherit;
+            resize: none;
         }
 
-        .controls input::placeholder {
+        .controls textarea::placeholder {
             color: #98a198;
             letter-spacing: 0.04em;
             font-size: 16px;
         }
 
-        .controls input:focus {
+        .controls textarea:focus {
             border-color: rgba(31, 122, 104, 0.42);
             box-shadow: 0 0 0 5px rgba(31, 122, 104, 0.12);
             background: #fff;
+        }
+
+        .controls .btn {
+            flex-shrink: 0;
         }
 
         .btn {
@@ -332,7 +343,9 @@
         .screen {
             display: none;
             flex-direction: column;
-            gap: 10px;
+            gap: 6px;
+            flex: 1;
+            min-height: 0;
         }
 
         .screen.active {
@@ -391,7 +404,7 @@
         .stroke-order-shell,
         .score-shell,
         .grids-shell,
-        .quiz-char-tabs {
+        .char-tabs {
             position: relative;
             z-index: 1;
         }
@@ -403,13 +416,25 @@
             align-items: center;
             justify-content: space-between;
             gap: 10px;
-            margin-bottom: 10px;
+            margin-bottom: 0;
         }
 
         .stage-title {
             font-size: 18px;
             font-weight: 700;
             letter-spacing: 0.04em;
+        }
+
+        .stage-titles {
+            display: flex;
+            align-items: baseline;
+            flex-wrap: wrap;
+            gap: 4px 10px;
+            min-width: 0;
+        }
+
+        .stage-titles .stage-subtitle {
+            margin-top: 0;
         }
 
         .stage-subtitle {
@@ -428,6 +453,56 @@
             display: flex;
             flex-direction: column;
             gap: 10px;
+        }
+
+        .setting-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+            min-height: 56px;
+            padding: 0 16px;
+            border-radius: 18px;
+            background: rgba(255, 255, 255, 0.72);
+            border: 1px solid rgba(114, 90, 53, 0.08);
+            color: #4d584d;
+            font-size: 14px;
+            font-weight: 600;
+            user-select: none;
+            width: 100%;
+        }
+
+        .setting-row .setting-copy {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .speed-input {
+            width: 64px;
+            height: 32px;
+            padding: 0 6px;
+            border: 1px solid rgba(31, 122, 104, 0.18);
+            border-radius: 8px;
+            background: #fff;
+            font: inherit;
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--primary);
+            text-align: center;
+            outline: none;
+            transition: border-color 0.15s, box-shadow 0.15s;
+            flex-shrink: 0;
+            -moz-appearance: textfield;
+        }
+
+        .speed-input::-webkit-outer-spin-button,
+        .speed-input::-webkit-inner-spin-button {
+            opacity: 1;
+        }
+
+        .speed-input:focus {
+            border-color: rgba(31, 122, 104, 0.5);
+            box-shadow: 0 0 0 3px rgba(31, 122, 104, 0.12);
         }
 
         .setting-copy {
@@ -573,27 +648,28 @@
             font-weight: 700;
         }
 
-        .quiz-char-tabs {
+        .char-tabs {
             display: none;
-            gap: 8px;
-            flex-wrap: wrap;
+            gap: 4px;
+            grid-template-columns: repeat(8, minmax(0, 36px));
             justify-content: center;
+            width: 100%;
             margin-bottom: 10px;
         }
 
-        .quiz-char-tabs.visible {
-            display: flex;
+        .char-tabs.visible {
+            display: grid;
         }
 
-        .quiz-char-tab {
-            width: 42px;
-            height: 42px;
+        .char-tab {
+            width: 100%;
+            aspect-ratio: 1;
             display: flex;
             align-items: center;
             justify-content: center;
             font-size: 18px;
             border: 1px solid rgba(114, 90, 53, 0.12);
-            border-radius: 14px;
+            border-radius: 12px;
             cursor: pointer;
             background: rgba(255, 255, 255, 0.88);
             color: var(--text);
@@ -601,22 +677,22 @@
             position: relative;
         }
 
-        .quiz-char-tab:active {
+        .char-tab:active {
             transform: scale(0.95);
         }
 
-        .quiz-char-tab.active {
+        .char-tab.active {
             border-color: rgba(31, 122, 104, 0.24);
             background: linear-gradient(135deg, rgba(31, 122, 104, 0.9), rgba(44, 154, 131, 0.92));
             color: #fff;
             box-shadow: 0 12px 24px rgba(31, 122, 104, 0.2);
         }
 
-        .quiz-char-tab.done {
+        .char-tab.done {
             border-color: rgba(47, 143, 91, 0.24);
         }
 
-        .quiz-char-tab.done::after {
+        .char-tab.done::after {
             content: '✓';
             position: absolute;
             top: -4px;
@@ -633,7 +709,7 @@
             line-height: 1;
         }
 
-        .quiz-char-tab.active.done::after {
+        .char-tab.active.done::after {
             background: #fff;
             color: var(--primary);
         }
@@ -696,11 +772,11 @@
             background: var(--primary);
         }
 
-        .grids-row.quiz-mode .grid-cell {
+        .grids-row.single-mode .grid-cell {
             display: none;
         }
 
-        .grids-row.quiz-mode .grid-cell.active {
+        .grids-row.single-mode .grid-cell.active {
             display: block;
         }
 
@@ -827,17 +903,21 @@
 
         .button-row {
             display: grid;
-            grid-template-columns: repeat(2, minmax(0, 1fr));
             gap: 10px;
             width: 100%;
+            margin-top: auto;
         }
 
         .button-row .btn {
             width: 100%;
         }
 
-        #quizButtons .btn {
-            grid-column: 1 / -1;
+        #demoButtons {
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
+
+        #quizButtons {
+            grid-template-columns: 1fr;
         }
 
         @media (min-width: 640px) {
@@ -854,18 +934,13 @@
                 font-size: 30px;
             }
 
-            .controls input {
-                height: 58px;
+            .controls textarea {
                 font-size: 24px;
             }
 
             .btn {
                 min-height: 54px;
                 font-size: 16px;
-            }
-
-            .button-row {
-                grid-template-columns: repeat(4, minmax(0, 1fr));
             }
 
             .tabbar {
@@ -907,14 +982,8 @@
                 padding: 12px;
             }
 
-            .controls {
-                grid-template-columns: 1fr;
-            }
-
-            .controls input {
-                height: 50px;
+            .controls textarea {
                 font-size: 20px;
-                text-align: center;
             }
 
             .grids-shell {
@@ -925,13 +994,21 @@
                 border-radius: 0;
             }
 
-            .quiz-char-tab {
-                width: 38px;
-                height: 38px;
+            .char-tabs {
+                gap: 2px;
+            }
+
+            .char-tab {
+                font-size: 16px;
             }
 
             .button-row {
-                grid-template-columns: 1fr 1fr;
+                gap: 6px;
+            }
+
+            .button-row .btn {
+                padding: 0 8px;
+                font-size: 14px;
             }
 
             .hero-meta {
@@ -966,13 +1043,13 @@
                 <div class="input-top">
                     <div class="input-title-group">
                         <div class="section-title">练习内容</div>
-                        <div class="section-subtitle">输入最多 6 个汉字，加载后即可在演示或练习中切换使用。</div>
+                        <div class="section-subtitle">输入最多 24 个汉字，加载后即可在演示或练习中切换使用。</div>
                     </div>
                 </div>
 
                 <div class="input-body">
                     <div class="controls">
-                        <input type="text" id="charInput" maxlength="6" placeholder="输入汉字，最多6个" />
+                        <textarea id="charInput" maxlength="24" placeholder="输入汉字，最多24个"></textarea>
                         <button class="btn btn-primary" id="loadBtn" onclick="loadCharacter()">加载内容</button>
                     </div>
                 </div>
@@ -981,7 +1058,7 @@
             <section class="practice-card" id="practiceCard">
                 <div class="screen active" id="screenDemo">
                     <div class="stage-top">
-                        <div>
+                        <div class="stage-titles">
                             <div class="stage-title">演示模式</div>
                             <div class="stage-subtitle">逐笔查看当前汉字的书写顺序。</div>
                         </div>
@@ -990,8 +1067,10 @@
                     <div class="stage-card">
                         <div class="info sr-only" id="strokeInfo" aria-live="polite">请输入汉字并点击「加载内容」</div>
 
+                        <div class="char-tabs" id="demoCharTabs"></div>
+
                         <div class="grids-shell">
-                            <div class="grids-row" id="demoGridsRow"></div>
+                            <div class="grids-row single-mode" id="demoGridsRow"></div>
                         </div>
 
                         <div class="stroke-order-shell">
@@ -1003,24 +1082,23 @@
                     <div class="button-row" id="demoButtons">
                         <button class="btn btn-stroke" id="nextStrokeBtn" onclick="showNextStroke()" disabled>下一笔</button>
                         <button class="btn btn-replay" id="replayBtn" onclick="replayStroke()" disabled>重复当前笔</button>
-                        <button class="btn btn-reset" id="resetBtn" onclick="resetStrokes()" disabled>重置演示</button>
                         <button class="btn btn-animate" id="animateBtn" onclick="animateAll()" disabled>自动书写</button>
                     </div>
                 </div>
 
                 <div class="screen" id="screenQuiz">
                     <div class="stage-top">
-                        <div>
+                        <div class="stage-titles">
                             <div class="stage-title">练习模式</div>
                             <div class="stage-subtitle">手写临摹并实时判断笔顺是否正确。</div>
                         </div>
                     </div>
 
                     <div class="stage-card">
-                        <div class="quiz-char-tabs" id="quizCharTabs"></div>
+                        <div class="char-tabs" id="quizCharTabs"></div>
 
                         <div class="grids-shell">
-                            <div class="grids-row quiz-mode" id="quizGridsRow"></div>
+                            <div class="grids-row single-mode" id="quizGridsRow"></div>
                         </div>
 
                         <div class="stroke-order-shell">
@@ -1064,6 +1142,32 @@
                                     <span class="switch-slider"></span>
                                 </span>
                             </label>
+                            <label class="voice-toggle" for="autoAnimateToggle">
+                                <div class="setting-copy">
+                                    <span class="setting-title">跳转自动书写</span>
+                                    <span class="setting-desc">开启后，自动切换到下一个字时自动开始书写。</span>
+                                </div>
+                                <span class="switch">
+                                    <input type="checkbox" id="autoAnimateToggle" />
+                                    <span class="switch-slider"></span>
+                                </span>
+                            </label>
+
+                            <div class="setting-row">
+                                <div class="setting-copy">
+                                    <span class="setting-title">笔画速度</span>
+                                    <span class="setting-desc">笔画动画的快慢，可设置 0.1 ~ 5 倍。</span>
+                                </div>
+                                <input type="number" id="strokeSpeedInput" class="speed-input" min="0.1" max="5" step="0.1" value="1" aria-label="笔画速度倍率" />
+                            </div>
+
+                            <div class="setting-row">
+                                <div class="setting-copy">
+                                    <span class="setting-title">发音速度</span>
+                                    <span class="setting-desc">发音的语速，可设置 0.1 ~ 5 倍。</span>
+                                </div>
+                                <input type="number" id="voiceSpeedInput" class="speed-input" min="0.1" max="5" step="0.1" value="1" aria-label="发音速度倍率" />
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -1107,9 +1211,13 @@
         let charStrokeNames = [];    // 每个字的笔画名称数组（来自 cnchar）
         let voiceEnabled = true;     // 笔画语音开关
         let charVoiceEnabled = true; // 汉字读音开关
+        let strokeSpeed = 1;         // 笔画动画速度倍率
+        let voiceSpeed = 1;          // 语音播放速率
         let strokeOrderFocus = -1;
         var voiceStorageKey = 'hanzi-stroke:voice-enabled';
         var charVoiceStorageKey = 'hanzi-stroke:char-voice-enabled';
+        var strokeSpeedKey = 'hanzi-stroke:stroke-speed';
+        var voiceSpeedKey = 'hanzi-stroke:voice-speed';
         var charAudioCache = {};     // 汉字音频缓存
         var quizHintTimer = null;
         var quizGuideWriter = null;
@@ -1130,16 +1238,57 @@
                 if (storedCharVoiceEnabled !== null) {
                     charVoiceEnabled = storedCharVoiceEnabled === 'true';
                 }
+                var storedAutoAnimateOnAdvance = localStorage.getItem(advanceAutoAnimateKey);
+                if (storedAutoAnimateOnAdvance !== null) {
+                    autoAnimateOnAdvance = storedAutoAnimateOnAdvance === 'true';
+                }
+                var storedStrokeSpeed = parseFloat(localStorage.getItem(strokeSpeedKey));
+                if (!isNaN(storedStrokeSpeed) && storedStrokeSpeed > 0) {
+                    strokeSpeed = clampSpeed(storedStrokeSpeed);
+                }
+                var storedVoiceSpeed = parseFloat(localStorage.getItem(voiceSpeedKey));
+                if (!isNaN(storedVoiceSpeed) && storedVoiceSpeed > 0) {
+                    voiceSpeed = clampSpeed(storedVoiceSpeed);
+                }
             } catch (e) {}
             document.getElementById('voiceToggle').checked = voiceEnabled;
             document.getElementById('charVoiceToggle').checked = charVoiceEnabled;
+            document.getElementById('strokeSpeedInput').value = strokeSpeed;
+            document.getElementById('voiceSpeedInput').value = voiceSpeed;
+            document.getElementById('autoAnimateToggle').checked = autoAnimateOnAdvance;
         }
 
         function persistVoiceSetting() {
             try {
                 localStorage.setItem(voiceStorageKey, String(voiceEnabled));
                 localStorage.setItem(charVoiceStorageKey, String(charVoiceEnabled));
+                localStorage.setItem(advanceAutoAnimateKey, String(autoAnimateOnAdvance));
             } catch (e) {}
+        }
+
+        function persistSpeedSettings() {
+            try {
+                localStorage.setItem(strokeSpeedKey, String(strokeSpeed));
+                localStorage.setItem(voiceSpeedKey, String(voiceSpeed));
+            } catch (e) {}
+        }
+
+        // 把数值钳到 [0.1, 5] 范围内，无效输入回退到 1
+        function clampSpeed(val) {
+            val = parseFloat(val);
+            if (isNaN(val) || val <= 0) return 1;
+            return Math.max(0.1, Math.min(5, Math.round(val * 10) / 10));
+        }
+
+        // 给数字 input 绑定变更事件
+        function bindSpeedInput(id, onChange) {
+            var input = document.getElementById(id);
+            if (!input) return;
+            input.addEventListener('change', function () {
+                var val = clampSpeed(this.value);
+                this.value = val;
+                onChange(val);
+            });
         }
 
         function ensureQuizGuideLayer(size) {
@@ -1178,7 +1327,7 @@
                     radicalColor: 'rgba(31, 122, 104, 0.72)',
                     highlightColor: 'rgba(31, 122, 104, 0.72)',
                     delayBetweenStrokes: 0,
-                    strokeAnimationSpeed: 0.55,
+                    strokeAnimationSpeed: 0.55 * strokeSpeed,
                     charDataLoader: function (c, onLoad) {
                         loadLocalCharData(c).then(onLoad).catch(function() {});
                     }
@@ -1367,7 +1516,7 @@
 
             currentMode = mode;
             updateModeUI();
-            updateQuizTabs();
+            updateCharTabs();
 
             if (charArray.length > 0 && mode !== 'settings') {
                 rebuildCurrentMode();
@@ -1388,7 +1537,7 @@
             var chars = input.match(/[\u4e00-\u9fff]/g);
             if (!chars || chars.length === 0) { alert('请输入有效的汉字！'); return; }
 
-            charArray = chars.slice(0, 6);
+            charArray = chars.slice(0, 24);
             charIndex = 0;
             charDone = {};
             loadedCount = 0;
@@ -1407,31 +1556,10 @@
                 ? document.querySelector('#screenQuiz .grids-shell')
                 : document.querySelector('#screenDemo .grids-shell');
             var available = shell ? shell.clientWidth - 8 : Math.min(vw, 720) - (vw <= 360 ? 20 : 32);
-            var gap = vw <= 360 ? 6 : 10;
 
-            if (count === 1) {
-                var s = Math.min(240, available * 0.72);
-                return { size: Math.round(s), padding: Math.round(s * 0.07) };
-            }
-
-            // quiz 模式：只显示一个大格子，尺寸接近单字
-            if (currentMode === 'quiz') {
-                var qs = Math.min(280, available * 0.82);
-                return { size: Math.round(qs), padding: Math.round(qs * 0.06) };
-            }
-
-            // 演示模式：一行最多 3 个
-            var perRow = Math.min(count, 3);
-            var idealSize = Math.floor((available - gap * (perRow - 1)) / perRow);
-
-            if (idealSize < 70) {
-                perRow = Math.max(2, Math.floor((available + gap) / (70 + gap)));
-                perRow = Math.min(perRow, 3);
-                idealSize = Math.floor((available - gap * (perRow - 1)) / perRow);
-            }
-
-            var cellSize = Math.max(72, Math.min(136, idealSize));
-            return { size: cellSize, padding: Math.max(4, Math.round(cellSize * 0.05)) };
+            // 演示和练习模式都只显示一个大格子
+            var size = Math.min(280, available * 0.82);
+            return { size: Math.round(size), padding: Math.round(size * 0.06) };
         }
 
         // ========== 创建所有格子 ==========
@@ -1488,7 +1616,7 @@
             charIndex = 0;
             currentChar = charArray[0];
             updateActiveUI();
-            renderQuizTabs();
+            renderCharTabs();
             updateModeUI();
         }
 
@@ -1510,7 +1638,7 @@
                 outlineColor: '#ddd4c7',
                 drawingColor: '#1f7a68',
                 drawingWidth: size > 150 ? 6 : (size > 90 ? 4 : 3),
-                strokeAnimationSpeed: 1,
+                strokeAnimationSpeed: strokeSpeed,
                 delayBetweenStrokes: 0,
                 highlightColor: '#9fd9cb',
                 showHintAfterMisses: 3,
@@ -1583,8 +1711,9 @@
         // ========== 选字 ==========
         function selectChar(idx) {
             if (idx === charIndex && !isAnimating) return;
-
+            var pendingAutoAnimate = advanceAutoAnimatePending;
             cancelAdvance();
+            advanceAutoAnimatePending = pendingAutoAnimate;
             quizSessionId++;
 
             // 如果正在自动书写，先取消当前动画
@@ -1626,9 +1755,19 @@
             } else {
                 updateInfo();
                 enableDemoButtons();
-                // 播放汉字读音
-                speakCharacter(currentChar);
+                // 播放汉字读音（自动书写时带回调）
+                if (advanceAutoAnimatePending && autoAnimateOnAdvance) {
+                    advanceAutoAnimatePending = false;
+                    speakCharacter(currentChar, function () {
+                        animateAll();
+                    });
+                } else {
+                    speakCharacter(currentChar);
+                }
             }
+
+            // 切换单字时复用「加载内容」的滚动逻辑
+            scrollToActiveScreen({ smooth: true, correct: true });
         }
 
         function updateActiveUI() {
@@ -1637,7 +1776,7 @@
                 cells[i].classList.toggle('active', i === charIndex);
                 cells[i].classList.toggle('done', !!charDone[i]);
             }
-            updateQuizTabs();
+            updateCharTabs();
         }
 
         // ========== 演示模式 ==========
@@ -1714,21 +1853,6 @@
             });
         }
 
-        function resetStrokes() {
-            if (!writer) return;
-            cancelAdvance();
-            isAnimating = false;
-            currentStroke = 0;
-            strokeOrderFocus = -1;
-            delete charDone[charIndex];
-            writer.hideCharacter();
-            writer.showOutline();
-            updateInfo();
-            updateActiveUI();
-            document.getElementById('nextStrokeBtn').disabled = false;
-            document.getElementById('replayBtn').disabled = true;
-        }
-
         function animateAll() {
             if (!writer) return;
 
@@ -1742,7 +1866,6 @@
             document.getElementById('nextStrokeBtn').disabled = true;
             document.getElementById('replayBtn').disabled = true;
             document.getElementById('animateBtn').disabled = true;
-            document.getElementById('resetBtn').disabled = true;
 
             // 锁定当前字的信息
             var lockedWriter = writer;
@@ -1760,7 +1883,6 @@
                     document.getElementById('strokeInfo').innerHTML =
                         '「' + lockedChar + '」完成！共 <span class="highlight">' + lockedTotal + '</span> 笔 ✅';
                     document.getElementById('animateBtn').disabled = false;
-                    document.getElementById('resetBtn').disabled = false;
                     document.getElementById('replayBtn').disabled = false;
                     document.getElementById('nextStrokeBtn').disabled = true;
                     if (charArray.length > 1) autoAdvance();
@@ -1813,14 +1935,12 @@
         function enableDemoButtons() {
             document.getElementById('nextStrokeBtn').disabled = false;
             document.getElementById('replayBtn').disabled = (currentStroke <= 0);
-            document.getElementById('resetBtn').disabled = false;
             document.getElementById('animateBtn').disabled = false;
         }
 
         function disableDemoButtons() {
             document.getElementById('nextStrokeBtn').disabled = true;
             document.getElementById('replayBtn').disabled = true;
-            document.getElementById('resetBtn').disabled = true;
             document.getElementById('animateBtn').disabled = true;
         }
 
@@ -1922,6 +2042,7 @@
                 return;
             }
             var player = strokeAudioCache[displayName].cloneNode();
+            player.playbackRate = voiceSpeed;
             player.onended = function () { if (onDone) onDone(); };
             player.onerror = function () { if (onDone) onDone(); };
             player.play().catch(function () { if (onDone) onDone(); });
@@ -1948,6 +2069,7 @@
                 return;
             }
             var player = charAudioCache[char].cloneNode();
+            player.playbackRate = voiceSpeed;
             player.onended = function () { if (onDone) onDone(); };
             player.onerror = function () { if (onDone) onDone(); };
             player.play().catch(function () { if (onDone) onDone(); });
@@ -2049,6 +2171,9 @@
                 beginQuizInteraction();
             }
         }
+        var autoAnimateOnAdvance = false; // 自动跳转后自动书写
+        var advanceAutoAnimateKey = 'hanzi-stroke:auto-animate-on-advance';
+        var advanceAutoAnimatePending = false; // selectChar后是否自动书写
 
         function enableQuizButtons() {
             document.getElementById('quizResetBtn').disabled = false;
@@ -2063,6 +2188,7 @@
         }
 
         function cancelAdvance() {
+            advanceAutoAnimatePending = false;
             if (advanceTimer) {
                 clearTimeout(advanceTimer);
                 advanceTimer = null;
@@ -2080,6 +2206,7 @@
                     (function(nextIdx) {
                         advanceTimer = setTimeout(function() {
                             advanceTimer = null;
+                            advanceAutoAnimatePending = true;
                             selectChar(nextIdx);
                         }, 800);
                     })(idx);
@@ -2093,34 +2220,56 @@
             }, 800);
         }
 
-        // ========== Quiz 切字标签 ==========
-        function renderQuizTabs() {
-            var container = document.getElementById('quizCharTabs');
-            container.innerHTML = '';
-            if (currentMode !== 'quiz' || charArray.length <= 1) {
-                container.classList.remove('visible');
-                return;
+        // ========== 字符切换标签（演示 / 练习模式共用） ==========
+        function getCharTabContainers() {
+            return [
+                document.getElementById('demoCharTabs'),
+                document.getElementById('quizCharTabs')
+            ].filter(Boolean);
+        }
+
+        function getActiveCharTabContainer() {
+            if (currentMode === 'demo') return document.getElementById('demoCharTabs');
+            if (currentMode === 'quiz') return document.getElementById('quizCharTabs');
+            return null;
+        }
+
+        function renderCharTabs() {
+            var containers = getCharTabContainers();
+            for (var c = 0; c < containers.length; c++) {
+                containers[c].innerHTML = '';
+                containers[c].classList.remove('visible');
             }
-            container.classList.add('visible');
+            var active = getActiveCharTabContainer();
+            if (!active || charArray.length <= 1) return;
+
+            active.classList.add('visible');
             for (var i = 0; i < charArray.length; i++) {
                 var tab = document.createElement('div');
-                tab.className = 'quiz-char-tab' + (i === charIndex ? ' active' : '') + (charDone[i] ? ' done' : '');
+                tab.className = 'char-tab' + (i === charIndex ? ' active' : '') + (charDone[i] ? ' done' : '');
                 tab.textContent = charArray[i];
                 tab.onclick = (function(idx) {
                     return function() { selectChar(idx); };
                 })(i);
-                container.appendChild(tab);
+                active.appendChild(tab);
             }
         }
 
-        function updateQuizTabs() {
-            if (currentMode !== 'quiz' || charArray.length <= 1) {
-                document.getElementById('quizCharTabs').classList.remove('visible');
+        function updateCharTabs() {
+            var containers = getCharTabContainers();
+            var active = getActiveCharTabContainer();
+            if (!active || charArray.length <= 1) {
+                for (var c = 0; c < containers.length; c++) {
+                    containers[c].classList.remove('visible');
+                }
                 return;
             }
-            var tabs = document.querySelectorAll('.quiz-char-tab');
+            for (var k = 0; k < containers.length; k++) {
+                containers[k].classList.toggle('visible', containers[k] === active);
+            }
+            var tabs = active.querySelectorAll('.char-tab');
             if (tabs.length === 0) {
-                renderQuizTabs();
+                renderCharTabs();
                 return;
             }
             for (var i = 0; i < tabs.length; i++) {
@@ -2130,8 +2279,12 @@
         }
 
         // ========== 回车加载 ==========
+        // textarea 中 Enter 用于换行，使用 Cmd/Ctrl+Enter 触发加载
         document.getElementById('charInput').addEventListener('keydown', function (e) {
-            if (e.key === 'Enter') loadCharacter();
+            if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
+                e.preventDefault();
+                loadCharacter();
+            }
         });
 
         // ========== 语音开关 ==========
@@ -2143,6 +2296,24 @@
         document.getElementById('charVoiceToggle').addEventListener('change', function () {
             charVoiceEnabled = this.checked;
             persistVoiceSetting();
+        });
+
+        document.getElementById('autoAnimateToggle').addEventListener('change', function () {
+            autoAnimateOnAdvance = this.checked;
+            persistVoiceSetting();
+        });
+
+        // ========== 速度设置 ==========
+        bindSpeedInput('strokeSpeedInput', function (val) {
+            strokeSpeed = val;
+            persistSpeedSettings();
+            // 切回演示/练习时由 switchMode → rebuildCurrentMode 重建 writers，
+            // 应用新速度；这里无需立即重建。
+        });
+
+        bindSpeedInput('voiceSpeedInput', function (val) {
+            voiceSpeed = val;
+            persistSpeedSettings();
         });
 
         loadSettings();
@@ -2164,6 +2335,15 @@
                 }
             }, 300);
         });
+    </script>
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', function () {
+                navigator.serviceWorker.register('./sw.js').catch(function (err) {
+                    console.warn('SW registration failed:', err);
+                });
+            });
+        }
     </script>
 </body>
 </html>
